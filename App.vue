@@ -1,6 +1,6 @@
 <template>
   <view class="container">
-    <text class="text-color-primary">My Vue Native App</text>
+    <text class="text-color-primary">Demand Response Main</text>
   </view>
 </template>
 

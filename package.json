@@ -16,7 +16,13 @@
     ],
     "version": "1.0.0",
     "packagerOpts": {
-      "sourceExts": ["js", "json", "ts", "tsx", "vue"],
+      "sourceExts": [
+        "js",
+        "json",
+        "ts",
+        "tsx",
+        "vue"
+      ],
       "config": "metro.config.js"
     }
   },
@@ -26,13 +32,13 @@
     "react-dom": "16.8.3",
     "react-native": "https://github.com/expo/react-native/archive/sdk-35.0.0.tar.gz",
     "react-native-web": "^0.11.7",
-    "vue-native-core": "0.1.4",
-    "vue-native-helper": "0.1.4"
+    "vue-native-core": "^0.1.4",
+    "vue-native-helper": "^0.1.4"
   },
   "devDependencies": {
     "@babel/core": "7.0.1",
     "babel-preset-expo": "^7.0.0",
-    "vue-native-scripts": "0.1.4"
+    "vue-native-scripts": "^0.1.4"
   },
   "private": true
 }
