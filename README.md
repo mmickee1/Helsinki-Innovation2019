@@ -2,7 +2,7 @@
 Innovation project for City of Helsinki
 
 
-Installation: 
+# Installation: 
 
 ```
 git clone https://github.com/mmickee1/Helsinki-Innovation2019.git
