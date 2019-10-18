@@ -4,8 +4,10 @@ Innovation project for City of Helsinki
 
 Installation: 
 
+```
 git clone https://github.com/mmickee1/Helsinki-Innovation2019.git
 cd Helsinki-Innovation2019
+```
 
 # in node.js command prompt
 ```
