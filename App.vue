@@ -1,17 +1,34 @@
 <template>
-  <view class="container">
-    <text class="text-color-primary">Demand Response Main</text>
-  </view>
+  <app-navigator></app-navigator>
 </template>
 
-<style>
-.container {
-  background-color: white;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-}
-.text-color-primary {
-  color: blue;
-}
-</style>
+<script>
+import {
+  createAppContainer,
+  createStackNavigator,
+  createDrawerNavigator
+} from "vue-native-router";
+import MapScreen from "./screens/MapScreen.vue";
+import GeneralGraphScreen from "./screens/GeneralGraphScreen.vue";
+import DetailedGraphScreen from "./screens/DetailedGraphScreen.vue";
+const DrawerNavigator = createDrawerNavigator(
+  {
+    Map: MapScreen,
+    GeneralGraph: GeneralGraphScreen,
+    DetailedGraph: DetailedGraphScreen
+  },
+  {
+    initialRouteName: "Map"
+  }
+);
+const StackNavigator = createStackNavigator({
+  Drawer: DrawerNavigator,
+  Map: MapScreen,
+  GeneralGraph: GeneralGraphScreen,
+  DetailedGraph: DetailedGraphScreen
+});
+const AppNavigator = createAppContainer(StackNavigator);
+export default {
+  components: { AppNavigator }
+};
+</script>
