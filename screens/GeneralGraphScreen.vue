@@ -87,13 +87,13 @@ export default {
 .rightside {
   align-items: center;
   background-color: aqua;
-  float: right;
+  /* float: right; */
   width: 50%;
 }
 .leftside {
   align-items: center;
   background-color: gold;
-  float: left;
+  /* float: left; */
   width: 50%;
 }
 /*#btn {
