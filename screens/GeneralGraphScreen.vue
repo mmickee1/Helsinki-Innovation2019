@@ -5,33 +5,55 @@
         <text class="heading">All graphs</text>
       </view>
       <view class="wrapper">
-        <view class="leftside" id="btn">
-          <!--  <button v-bind:title="messageDetailed" v-bind:on-press="nextPage"></button>-->
-          <touchable-opacity :on-press="onPressButton">
-            <image :style="{width: width, height: height}" :source="{uri: imagecircle}" />
-          </touchable-opacity>
+        <view class="leftside">
+          <TouchableOpacity :on-press="onPressButton">
+            <view class="circlered" style>
+              <text class="transparent">Value</text>
+            </view>
+          </TouchableOpacity>
+          <text>Type</text>
 
-          <touchable-opacity :on-press="onPressButton">
-            <image :style="{width: width, height: height}" :source="{uri: imagecircle}" />
-          </touchable-opacity>
+          <TouchableOpacity :on-press="onPressButton">
+            <view class="circlered" style>
+              <text class="transparent">Value</text>
+            </view>
+          </TouchableOpacity>
+          <text>Type</text>
+         <!-- <Text style="{styles.bigBlue}">just bigBlue</Text>-->
 
-          <touchable-opacity :on-press="onPressButton">
+          <TouchableOpacity :on-press="onPressButton">
+            <view class="circlered" style>
+              <text class="transparent">Value</text>
+            </view>
+          </TouchableOpacity>
+          <text>Type</text>
+
+          <!--  <touchable-opacity :on-press="onPressButton">
             <image :style="{width: width, height: height}" :source="{uri: imagecircle}" />
-          </touchable-opacity>
+          </touchable-opacity>-->
         </view>
 
-        <view class="rightside" id="btn">
-          <touchable-opacity :on-press="onPressButton">
-            <image :style="{width: width, height: height}" :source="{uri: imagecircle}" />
-          </touchable-opacity>
+        <view class="rightside">
+          <TouchableOpacity :on-press="onPressButton">
+            <view class="circleyellow" style>
+              <text class="transparent">Value</text>
+            </view>
+          </TouchableOpacity>
+          <text>Type</text>
 
-          <touchable-opacity :on-press="onPressButton">
-            <image :style="{width: width, height: height}" :source="{uri: imagecircle}" />
-          </touchable-opacity>
+          <TouchableOpacity :on-press="onPressButton">
+            <view class="circleyellow" style>
+              <text class="transparent">Value</text>
+            </view>
+          </TouchableOpacity>
+          <text>Type</text>
 
-          <touchable-opacity :on-press="onPressButton">
-            <image :style="{width: width, height: height}" :source="{uri: imagecircle}" />
-          </touchable-opacity>
+          <TouchableOpacity :on-press="onPressButton">
+            <view class="circlegreen" style>
+              <text class="transparent">Value</text>
+            </view>
+          </TouchableOpacity>
+          <text>Type</text>
         </view>
       </view>
     </scroll-view>
@@ -39,6 +61,20 @@
 </template>
 
 <script>
+import React, { Component } from "react";
+import { StyleSheet, TouchableOpacity, Text, View } from "react-native";
+
+const styles = StyleSheet.create({
+  bigBlue: {
+    color: "blue",
+    fontWeight: "bold",
+    fontSize: 30
+  },
+  red: {
+    color: "red"
+  }
+});
+
 export default {
   props: {
     navigation: {
@@ -57,49 +93,80 @@ export default {
   methods: {
     nextPage() {
       alert("Hello");
-      //this.navigation.navigate("GeneralGraph");
     },
     goToDetailedGraphScreen() {
       this.navigation.navigate("DetailedGraph");
     },
     onPressButton() {
       this.navigation.navigate("DetailedGraph");
-    }
+    },
+    onPressButtonlast() {}
   }
 };
 </script>
 
 <style>
-.container {
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-}
 .heading {
   font-size: 30px;
   font-weight: bold;
   color: darkolivegreen;
   margin: 20px;
   align-items: center;
-  justify-content: center;
-  align-content: center;
 }
 .rightside {
   align-items: center;
   background-color: aqua;
-  /* float: right; */
   width: 50%;
 }
 .leftside {
   align-items: center;
   background-color: gold;
-  /* float: left; */
+  justify-content: space-around;
   width: 50%;
 }
-/*#btn {
-  margin-left: 100px;
-  margin-right: 100px;
-  padding-right: 60px;
-  padding-left: 10px;
-}*/
+.circlered {
+  background-color: red;
+  width: 150px;
+  height: 150px;
+  border-radius: 100px;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+}
+.circleyellow {
+  background-color: yellow;
+  width: 150px;
+  height: 150px;
+  border-radius: 100px;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+}
+.circlegreen {
+  background-color: green;
+  width: 150px;
+  height: 150px;
+  border-radius: 100px;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+}
+.circlered:hover {
+  background-color: yellow;
+}
+.circlered:checked {
+  background-color: yellow;
+}
+.wrapper {
+  width: 100%;
+  background-color: pink;
+  justify-content: space-around;
+  display: flex;
+}
+scroll-view {
+  width: 100%;
+}
+.transparent {
+  background-color: inherit;
+}
 </style>
