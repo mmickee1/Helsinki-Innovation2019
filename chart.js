@@ -10,16 +10,34 @@ import Svg, {
   Text as SVGText
 } from 'react-native-svg';
 
-drawChartLine = (width, height, yaxis, numPoints) => {
+generateChartX = (area, numPoints, x) => {
+  let xpoint = area.x + ((area.width / (numPoints-1)) * x);
+  return xpoint;
+}
+
+generateChartY = (area, valueScale, y) => {
+  let ypoint = parseInt(area.y + area.height - ((area.height / (valueScale.max - valueScale.min)) * (y - valueScale.min)));
+  return ypoint;
+}
+
+drawChartLine = (area, valueScale, points) => {
   let path = "";
 
-  for (let i=0; i < numPoints; i++) {
-    let xpoint = ((width / (numPoints-1)) * i);
+  console.log(area.width);
+  console.log(area.height);
 
-    let ypoint = (height - yaxis) * Math.random();
+  
+
+  for (let i=0; i < points.length; i++) {
+    //let xpoint = area.x + ((area.width / (points.length-1)) * i);
     
+    let xpoint = generateChartX(area, points.length, i);
+    //let ypoint = parseInt(area.y + area.height - (((valueScale.max - valueScale.min) / height) * points[i]));
+    
+    let ypoint = generateChartY(area, valueScale, points[i]);
+
     let cmd = i == 0 ? 'M' : 'L';
-    path += `${cmd} ${xpoint} ${yaxis-ypoint} `;
+    path += `${cmd} ${xpoint} ${ypoint} `;
   }
 
   //path += "Z";
@@ -27,15 +45,81 @@ drawChartLine = (width, height, yaxis, numPoints) => {
   return path;
 };
 
-drawLabels = () => {
-
-  let values = [10, 20, 30, 40, 50, 60];
-
+drawXAxis = (chartArea, chartValueScale, values) => {
   return(
-    <G x="10">
+    <G>
+      {values.map((item, index) => {
+        let stroke, strokeWidth, strokeDashes;
+
+        if (item === 0) {
+          stroke = "black";
+          strokeWidth = "1";
+          strokeDashes = "";
+        } else {
+          stroke = "gray";
+          strokeWidth = "0.5";
+          strokeDashes = "5, 5";
+        }
+
+        let lineY = generateChartY(chartArea, chartValueScale, item);
+        return(
+          <Path
+            key={`x${item}`}
+            d={`M ${chartArea.x} ${lineY} h ${chartArea.width}`}
+            strokeWidth={strokeWidth}
+            stroke={stroke}
+            strokeDasharray={strokeDashes}
+          />
+        );
+      })}
+    </G>
+  );
+}
+
+drawLabels = (chartArea, chartValueScale, values) => {
+  return(
+    <G x="4">
       {values.map((item, index) => {
         console.log(item);
-        return <SVGText x="0" y={item} key={item} fontSize="10" textAnchor="start">{item} °C</SVGText>
+
+        let textY = generateChartY(chartArea, chartValueScale, item);
+
+        return <SVGText x={0} y={textY+4} key={item} fontSize="8" textAnchor="start">{item} °C</SVGText>
+      })}
+    </G>
+  );
+}
+
+drawYAxes = (chartArea, values) => {
+  return(
+    <G>
+      {values.map((item, index) => {
+        let x = generateChartX(chartArea, values.length, index);
+        return <Path d={`M ${x} 0 v ${chartArea.height}`} stroke="#cfcfcf" strokeWidth="1"/>
+      })}
+    </G>
+  );
+}
+
+drawHighlights = (chartArea, numPoints, highlights) => {
+  return(
+    <G>
+      {highlights.map((item, index) => {
+        let xStart = generateChartX(chartArea, numPoints, item.startColumn);
+        let xEnd = generateChartX(chartArea, numPoints, item.startColumn+item.numColumns);
+        return(
+          <Rect
+            key={`hr${index}`}
+            x={xStart}
+            y={chartArea.y}
+            rx="0"
+            ry="0"
+            width={xEnd-xStart}
+            height={chartArea.height}
+            fill={item.color}
+            opacity={item.opacity}
+          />
+        );
       })}
     </G>
   );
@@ -68,33 +152,46 @@ export class Chart extends React.Component {
     let width = this.state.width;
     let height = this.state.height;
 
-    let labelsWidth = 40;
+    let labelsWidth = 28;
     let labelsHeight = height;
     let chartWidth = width - labelsWidth - marginLeft - marginRight;
     let chartHeight = height;
 
     let yAxisY = height * 0.7;
 
+    let points = [20, 18, 22, 23, 25, 10, 12, 10, 22, 23, 25, 27, 30, 32];
 
-    let refShape = `M 0 ${yAxisY-30} h ${chartWidth}`;
-    let chartShape = drawChartLine(chartWidth, chartHeight, yAxisY, 15);
+    let chartArea = {x: 0, y: 0, width: chartWidth, height: chartHeight};
+    let chartValueScale = {min: -5, max: 45};
+
+    let chartShape = drawChartLine(chartArea, chartValueScale, points);
 
     console.log(chartShape);
 
+    let refShape = `M 0 ${generateChartY(chartArea, chartValueScale, 22)} h ${chartWidth}`;
+
+    let highlights = [
+      {startColumn: 0, numColumns: 1, color: "orange", opacity: "0.2"},
+      {startColumn: 4, numColumns: 4, color: "orange", opacity: "0.2"},
+      {startColumn: 12, numColumns: 1, color: "orange", opacity: "0.2"}
+    ];
+
+    let xLines = [0, 10, 20, 30, 40];
+
     return(
-      <View style={{width: '100%', height: '100%', backgroundColor: 'transparent'}} onLayout={this.onLayout}>
+      <View style={{width: '100%', height: '100%', backgroundColor: '#f8f8f8'}} onLayout={this.onLayout}>
         <Svg width={width} height={height}>
           <G>
             <G x={marginLeft} y={0} width={labelsWidth} height={labelsHeight}>
-              <Rect x={0} rx="0" ry="0" width={labelsWidth} height={labelsHeight} strokeWidth="0" fill="yellow"/>
-              {drawLabels()}
+              {drawLabels(chartArea, chartValueScale, xLines)}
             </G>
             <G x={marginLeft+labelsWidth} y="0" width={chartWidth} height={chartHeight}>
-              <Rect x={0} rx="0" ry="0" width={chartWidth} height={chartHeight} strokeWidth="0" fill="cyan"/>
-              <Path d={`M ${0} ${yAxisY} h ${chartWidth}`} stroke="black"/>
+              {drawXAxis(chartArea, chartValueScale, xLines)}
+              {drawYAxes(chartArea, points)}
+              {drawHighlights(chartArea, points.length, highlights)}
 
-              <Path d={refShape} stroke="blue" strokeWidth="2.5" fill="none"/>
-              <Path d={chartShape} stroke="orange" strokeWidth="2.5" fill="none"/>     
+              <Path d={refShape} stroke="blue" strokeWidth="1" fill="none"/>
+              <Path d={chartShape} stroke="orange" strokeWidth="2.5" fill="none"/>
             </G>
           </G>
         </Svg>
