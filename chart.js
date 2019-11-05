@@ -3,7 +3,6 @@ import React from 'react';
 import {View} from 'react-native';
 
 import Svg, {
-  Circle,
   Rect,
   G,
   Path,
@@ -23,30 +22,40 @@ generateChartY = (area, valueScale, y) => {
 drawChartLine = (area, valueScale, points, color) => {
   let path = "";
 
-  console.log(area.width);
-  console.log(area.height);
-
-  
-
   for (let i=0; i < points.length; i++) {
-    //let xpoint = area.x + ((area.width / (points.length-1)) * i);
-    
     let xpoint = generateChartX(area, points.length, i);
-    //let ypoint = parseInt(area.y + area.height - (((valueScale.max - valueScale.min) / height) * points[i]));
-    
     let ypoint = generateChartY(area, valueScale, points[i]);
 
     let cmd = i == 0 ? 'M' : 'L';
     path += `${cmd} ${xpoint} ${ypoint} `;
   }
 
-  //path += "Z";
   return(
     <G>
       <Path d={path} stroke={color} strokeWidth="2.5" fill="none"/>
     </G>
   );
 };
+
+drawChartArea = (area, valueScale, points, color) => {
+  let path = `M ${generateChartX(area, points.length, 0)} ${generateChartY(area, valueScale, 0)}`;
+
+  for (let i=0; i < points.length; i++) {
+    let xpoint = generateChartX(area, points.length, i);
+    let ypoint = generateChartY(area, valueScale, points[i]);
+
+    path += `L ${xpoint} ${ypoint} `;
+  }
+
+  path += `L ${generateChartX(area, points.length, points.length-1)} ${generateChartY(area, valueScale, 0)}`;
+  path += "Z";
+
+  return(
+    <G>
+      <Path d={path} stroke="transparent" strokeWidth="0" fill={color} opacity="0.5"/>
+    </G>
+  )
+}
 
 drawXAxis = (chartArea, chartValueScale, values) => {
   return(
@@ -79,7 +88,7 @@ drawXAxis = (chartArea, chartValueScale, values) => {
   );
 }
 
-drawLabels = (xpos, chartArea, chartValueScale, values, side) => {
+drawYLabels = (chartArea, chartValueScale, values, side) => {
   let anchor, textXpos;
   if (side === "left") {
     anchor = "end";
@@ -89,13 +98,33 @@ drawLabels = (xpos, chartArea, chartValueScale, values, side) => {
     textXpos = 2;
   }
   return(
-    <G x={xpos}>
+    <G x="4">
       {values.map((item, index) => {
-        console.log(item);
-
         let textY = generateChartY(chartArea, chartValueScale, item);
 
         return <SVGText x={textXpos} y={textY} key={item} fontSize="8" textAnchor={anchor}>{item}</SVGText>
+      })}
+    </G>
+  );
+}
+
+drawXLabels = (chartArea, labels) => {
+  return(
+    <G>
+      {labels.map((item, index) => {
+        let x = generateChartX(chartArea, labels.length, index);
+        return(
+          <SVGText
+            key={`xx${index}`}
+            x={0}
+            y={0}
+            fontSize="8"
+            textAnchor="end"
+            transform={`translate(${x},4) rotate(-90 0,0)`}
+          >
+            {item}
+          </SVGText>
+        ); 
       })}
     </G>
   );
@@ -184,9 +213,10 @@ export class Chart extends React.Component {
 
 
     let points = [20, 18, 22, 23, 25, 10, 12, 10, 22, 23, 25, 27, 30, 32];
-    //let rightPoints = [0, 50, 75, 50, 50, 100, 120, 130, 200, 180, 190, 50, 0, 0];
+    let rightPoints = [0, 50, 75, 50, 50, 100, 120, 130, 200, 180, 190, 50, 0, 0];
 
-    let rightPoints = [0, 200, 0];
+    let times = ["8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"];
+
 
     let chartArea = {x: 0, y: 0, width: chartWidth, height: chartHeight};
     let chartValueScale = {min: 0, max: 45};
@@ -196,7 +226,7 @@ export class Chart extends React.Component {
     let rightRefShape = `M 0 ${generateChartY(chartArea, chartValueScaleRight, 100)} h ${chartWidth}`;
 
     let highlights = [
-      {startColumn: 4, numColumns: 4, color: "orange", opacity: "0.2"},
+      {startColumn: 4, numColumns: 4, color: "orange", opacity: "0.4"},
     ];
 
     let xLabelsLeft = [0, 10, 20, 30, 40];
@@ -221,18 +251,26 @@ export class Chart extends React.Component {
             <SVGText x={width-2} y={12+14} fontSize="14" textAnchor="end">{rightUnit}</SVGText>
 
             <G x={marginLeft} y={marginTop} width={labelsWidthLeft} height={labelsHeight}>
-              {drawLabels(4, chartArea, chartValueScale, xLabelsLeft, "left")}
-              {drawLabels(labelsWidthLeft + chartWidth + 4, chartArea, chartValueScaleRight, xLabelsRight, "right")}
+              {drawYLabels(chartArea, chartValueScale, xLabelsLeft, "left")}
+              
+            </G>
+            <G x={width-marginRight-labelsWidthRight} y={marginTop} width={labelsWidthRight} height={labelsHeight}>
+              {drawYLabels(chartArea, chartValueScaleRight, xLabelsRight, "right")}
             </G>
             <G x={marginLeft+labelsWidthLeft} y={marginTop} width={chartWidth} height={chartHeight}>
               {drawXAxis(chartArea, chartValueScale, xLabelsLeft)}
               {drawYAxes(chartArea, points)}
               {drawHighlights(chartArea, points.length, highlights)}
 
-              <Path d={leftRefShape} stroke={leftRefColor} strokeWidth="1" fill="none"/>
-              <Path d={rightRefShape} stroke={rightRefColor} strokeWidth="1" fill="none"/>
+              
+              {drawChartArea(chartArea, chartValueScaleRight, rightPoints, rightChartColor)}
               {drawChartLine(chartArea, chartValueScale, points, leftChartColor)}
-              {drawChartLine(chartArea, chartValueScaleRight, rightPoints, rightChartColor)}
+              <Path d={rightRefShape} stroke={rightRefColor} strokeWidth="1" fill="none"/>
+              <Path d={leftRefShape} stroke={leftRefColor} strokeWidth="1" fill="none"/>
+            </G>
+
+            <G x={marginLeft+labelsWidthLeft} y={marginTop+chartHeight} width={chartArea.width} height={labelsBottomHeight}>
+              {drawXLabels(chartArea, times)}
             </G>
 
             <G x={bottomArea.x} y={bottomArea.y} width={bottomArea.width} height={bottomArea.height}>
