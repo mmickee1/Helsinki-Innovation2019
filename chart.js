@@ -169,18 +169,42 @@ export class Chart extends React.Component {
         {highlights.map((item, index) => {
           let xStart = this.generateChartX(chartArea, numPoints, item.startColumn);
           let xEnd = this.generateChartX(chartArea, numPoints, item.startColumn+item.numColumns);
+
+          let highlightTitle;
+          if (item.title) {
+            highlightTitle =
+            <G>
+              <Path
+                d={`M ${xStart} ${chartArea.y-2} q 0 -5 5 -5 l ${xEnd-xStart-10} 0 q 5 0 5 5`}
+                stroke="black"
+                strokeWidth="0.5"
+                fill="none"
+              />
+              <SVGText
+                x={xStart + ((xEnd-xStart) / 2)}
+                y={chartArea.y - 12}
+                fontSize="8"
+                textAnchor="middle"
+              >
+                {item.title}
+              </SVGText>
+            </G>
+          }
+
           return(
-            <Rect
-              key={`hr${index}`}
-              x={xStart}
-              y={chartArea.y}
-              rx="0"
-              ry="0"
-              width={xEnd-xStart}
-              height={chartArea.height}
-              fill={item.color}
-              opacity={item.opacity}
-            />
+            <G key={`hr${index}`}>
+              <Rect
+                x={xStart}
+                y={chartArea.y}
+                rx="0"
+                ry="0"
+                width={xEnd-xStart}
+                height={chartArea.height}
+                fill={item.color}
+                opacity={item.opacity}
+              />
+              {highlightTitle}
+            </G>
           );
         })}
       </G>
@@ -192,7 +216,7 @@ export class Chart extends React.Component {
   render() {
     let marginLeft = 5;
     let marginRight = 5;
-    let marginTop = 30;
+    let marginTop = 50;
     let marginBottom = 50;
 
     let width = this.state.width;
@@ -230,7 +254,7 @@ export class Chart extends React.Component {
     let rightRefShape = `M 0 ${this.generateChartY(chartArea, chartValueScaleRight, 100)} h ${chartWidth}`;
 
     let highlights = [
-      {startColumn: 4, numColumns: 4, color: "orange", opacity: "0.4"},
+      {startColumn: 4, numColumns: 4, color: "orange", opacity: "0.4", title: "jousto"},
     ];
 
     let xLabelsLeft = [0, 10, 20, 30, 40];

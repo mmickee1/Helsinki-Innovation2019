@@ -32,6 +32,6 @@ export default {
 }
 .chart-container {
   width: 100%;
-  height: 270px;
+  height: 290px;
 }
 </style>
