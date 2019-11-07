@@ -9,161 +9,6 @@ import Svg, {
   Text as SVGText
 } from 'react-native-svg';
 
-generateChartX = (area, numPoints, x) => {
-  let xpoint = area.x + ((area.width / (numPoints-1)) * x);
-  return xpoint;
-}
-
-generateChartY = (area, valueScale, y) => {
-  let ypoint = parseInt(area.y + area.height - ((area.height / (valueScale.max - valueScale.min)) * (y - valueScale.min)));
-  return ypoint;
-}
-
-drawChartLine = (area, valueScale, points, color) => {
-  let path = "";
-
-  for (let i=0; i < points.length; i++) {
-    let xpoint = generateChartX(area, points.length, i);
-    let ypoint = generateChartY(area, valueScale, points[i]);
-
-    let cmd = i == 0 ? 'M' : 'L';
-    path += `${cmd} ${xpoint} ${ypoint} `;
-  }
-
-  return(
-    <G>
-      <Path d={path} stroke={color} strokeWidth="2.5" fill="none"/>
-    </G>
-  );
-};
-
-drawChartArea = (area, valueScale, points, color) => {
-  let path = `M ${generateChartX(area, points.length, 0)} ${generateChartY(area, valueScale, 0)}`;
-
-  for (let i=0; i < points.length; i++) {
-    let xpoint = generateChartX(area, points.length, i);
-    let ypoint = generateChartY(area, valueScale, points[i]);
-
-    path += `L ${xpoint} ${ypoint} `;
-  }
-
-  path += `L ${generateChartX(area, points.length, points.length-1)} ${generateChartY(area, valueScale, 0)}`;
-  path += "Z";
-
-  return(
-    <G>
-      <Path d={path} stroke="transparent" strokeWidth="0" fill={color} opacity="0.5"/>
-    </G>
-  )
-}
-
-drawXAxis = (chartArea, chartValueScale, values) => {
-  return(
-    <G>
-      {values.map((item, index) => {
-        let stroke, strokeWidth, strokeDashes;
-
-        if (item === 0) {
-          stroke = "black";
-          strokeWidth = "1";
-          strokeDashes = "";
-        } else {
-          stroke = "gray";
-          strokeWidth = "0.5";
-          strokeDashes = "5, 5";
-        }
-
-        let lineY = generateChartY(chartArea, chartValueScale, item);
-        return(
-          <Path
-            key={`x${item}`}
-            d={`M ${chartArea.x} ${lineY} h ${chartArea.width}`}
-            strokeWidth={strokeWidth}
-            stroke={stroke}
-            strokeDasharray={strokeDashes}
-          />
-        );
-      })}
-    </G>
-  );
-}
-
-drawYLabels = (chartArea, chartValueScale, values, side) => {
-  let anchor, textXpos;
-  if (side === "left") {
-    anchor = "end";
-    textXpos = 12;
-  } else {
-    anchor = "start";
-    textXpos = 2;
-  }
-  return(
-    <G x="4">
-      {values.map((item, index) => {
-        let textY = generateChartY(chartArea, chartValueScale, item);
-
-        return <SVGText x={textXpos} y={textY} key={item} fontSize="8" textAnchor={anchor}>{item}</SVGText>
-      })}
-    </G>
-  );
-}
-
-drawXLabels = (chartArea, labels) => {
-  return(
-    <G>
-      {labels.map((item, index) => {
-        let x = generateChartX(chartArea, labels.length, index);
-        return(
-          <SVGText
-            key={`xx${index}`}
-            x={0}
-            y={0}
-            fontSize="8"
-            textAnchor="end"
-            transform={`translate(${x},4) rotate(-90 0,0)`}
-          >
-            {item}
-          </SVGText>
-        ); 
-      })}
-    </G>
-  );
-}
-
-drawYAxes = (chartArea, values) => {
-  return(
-    <G>
-      {values.map((item, index) => {
-        let x = generateChartX(chartArea, values.length, index);
-        return <Path key={`yx${index}`} d={`M ${x} 0 v ${chartArea.height}`} stroke="#cfcfcf" strokeWidth="1"/>
-      })}
-    </G>
-  );
-}
-
-drawHighlights = (chartArea, numPoints, highlights) => {
-  return(
-    <G>
-      {highlights.map((item, index) => {
-        let xStart = generateChartX(chartArea, numPoints, item.startColumn);
-        let xEnd = generateChartX(chartArea, numPoints, item.startColumn+item.numColumns);
-        return(
-          <Rect
-            key={`hr${index}`}
-            x={xStart}
-            y={chartArea.y}
-            rx="0"
-            ry="0"
-            width={xEnd-xStart}
-            height={chartArea.height}
-            fill={item.color}
-            opacity={item.opacity}
-          />
-        );
-      })}
-    </G>
-  );
-}
 
 export class Chart extends React.Component {
   constructor(props) {
@@ -181,6 +26,165 @@ export class Chart extends React.Component {
     console.log(`layout ${width} ${height}`);
 
     this.setState({width: width, height: height, layoutSet: true});
+  }
+
+
+  generateChartX = (area, numPoints, x) => {
+    let xpoint = area.x + ((area.width / (numPoints-1)) * x);
+    return xpoint;
+  }
+  
+  generateChartY = (area, valueScale, y) => {
+    let ypoint = parseInt(area.y + area.height - ((area.height / (valueScale.max - valueScale.min)) * (y - valueScale.min)));
+    return ypoint;
+  }
+  
+  drawChartLine = (area, valueScale, points, color) => {
+    let path = "";
+  
+    for (let i=0; i < points.length; i++) {
+      let xpoint = this.generateChartX(area, points.length, i);
+      let ypoint = this.generateChartY(area, valueScale, points[i]);
+  
+      let cmd = i == 0 ? 'M' : 'L';
+      path += `${cmd} ${xpoint} ${ypoint} `;
+    }
+  
+    return(
+      <G>
+        <Path d={path} stroke={color} strokeWidth="2.5" fill="none"/>
+      </G>
+    );
+  };
+  
+  drawChartArea = (area, valueScale, points, color) => {
+    let path = `M ${this.generateChartX(area, points.length, 0)} ${this.generateChartY(area, valueScale, 0)}`;
+  
+    for (let i=0; i < points.length; i++) {
+      let xpoint = this.generateChartX(area, points.length, i);
+      let ypoint = this.generateChartY(area, valueScale, points[i]);
+  
+      path += `L ${xpoint} ${ypoint} `;
+    }
+  
+    path += `L ${this.generateChartX(area, points.length, points.length-1)} ${this.generateChartY(area, valueScale, 0)}`;
+    path += "Z";
+  
+    return(
+      <G>
+        <Path d={path} stroke="transparent" strokeWidth="0" fill={color} opacity="0.5"/>
+      </G>
+    )
+  }
+  
+  drawXAxis = (chartArea, chartValueScale, values) => {
+    return(
+      <G>
+        {values.map((item, index) => {
+          let stroke, strokeWidth, strokeDashes;
+  
+          if (item === 0) {
+            stroke = "black";
+            strokeWidth = "1";
+            strokeDashes = "";
+          } else {
+            stroke = "gray";
+            strokeWidth = "0.5";
+            strokeDashes = "5, 5";
+          }
+  
+          let lineY = this.generateChartY(chartArea, chartValueScale, item);
+          return(
+            <Path
+              key={`x${item}`}
+              d={`M ${chartArea.x} ${lineY} h ${chartArea.width}`}
+              strokeWidth={strokeWidth}
+              stroke={stroke}
+              strokeDasharray={strokeDashes}
+            />
+          );
+        })}
+      </G>
+    );
+  }
+  
+  drawYLabels = (chartArea, chartValueScale, values, side) => {
+    let anchor, textXpos;
+    if (side === "left") {
+      anchor = "end";
+      textXpos = 12;
+    } else {
+      anchor = "start";
+      textXpos = 2;
+    }
+    return(
+      <G x="4">
+        {values.map((item, index) => {
+          let textY = this.generateChartY(chartArea, chartValueScale, item);
+  
+          return <SVGText x={textXpos} y={textY} key={item} fontSize="8" textAnchor={anchor}>{item}</SVGText>
+        })}
+      </G>
+    );
+  }
+  
+  drawXLabels = (chartArea, labels) => {
+    return(
+      <G>
+        {labels.map((item, index) => {
+          let x = this.generateChartX(chartArea, labels.length, index);
+          return(
+            <SVGText
+              key={`xx${index}`}
+              x={0}
+              y={0}
+              fontSize="8"
+              textAnchor="end"
+              transform={`translate(${x},4) rotate(-90 0,0)`}
+            >
+              {item}
+            </SVGText>
+          ); 
+        })}
+      </G>
+    );
+  }
+
+
+  drawYAxes = (chartArea, values) => {
+    return(
+      <G>
+        {values.map((item, index) => {
+          let x = this.generateChartX(chartArea, values.length, index);
+          return <Path key={`yx${index}`} d={`M ${x} 0 v ${chartArea.height}`} stroke="#cfcfcf" strokeWidth="1"/>
+        })}
+      </G>
+    );
+  }
+
+
+  drawHighlights = (chartArea, numPoints, highlights) => {
+    return(
+      <G>
+        {highlights.map((item, index) => {
+          let xStart = this.generateChartX(chartArea, numPoints, item.startColumn);
+          let xEnd = this.generateChartX(chartArea, numPoints, item.startColumn+item.numColumns);
+          return(
+            <Rect
+              key={`hr${index}`}
+              x={xStart}
+              y={chartArea.y}
+              rx="0"
+              ry="0"
+              width={xEnd-xStart}
+              height={chartArea.height}
+              fill={item.color}
+              opacity={item.opacity}
+            />
+          );
+        })}
+      </G>
+    );
   }
 
   
@@ -222,8 +226,8 @@ export class Chart extends React.Component {
     let chartValueScale = {min: 0, max: 45};
     let chartValueScaleRight = {min: 0, max: 250};
 
-    let leftRefShape = `M 0 ${generateChartY(chartArea, chartValueScale, 22)} h ${chartWidth}`;
-    let rightRefShape = `M 0 ${generateChartY(chartArea, chartValueScaleRight, 100)} h ${chartWidth}`;
+    let leftRefShape = `M 0 ${this.generateChartY(chartArea, chartValueScale, 22)} h ${chartWidth}`;
+    let rightRefShape = `M 0 ${this.generateChartY(chartArea, chartValueScaleRight, 100)} h ${chartWidth}`;
 
     let highlights = [
       {startColumn: 4, numColumns: 4, color: "orange", opacity: "0.4"},
@@ -251,26 +255,26 @@ export class Chart extends React.Component {
             <SVGText x={width-2} y={12+14} fontSize="14" textAnchor="end">{rightUnit}</SVGText>
 
             <G x={marginLeft} y={marginTop} width={labelsWidthLeft} height={labelsHeight}>
-              {drawYLabels(chartArea, chartValueScale, xLabelsLeft, "left")}
+              {this.drawYLabels(chartArea, chartValueScale, xLabelsLeft, "left")}
               
             </G>
             <G x={width-marginRight-labelsWidthRight} y={marginTop} width={labelsWidthRight} height={labelsHeight}>
-              {drawYLabels(chartArea, chartValueScaleRight, xLabelsRight, "right")}
+              {this.drawYLabels(chartArea, chartValueScaleRight, xLabelsRight, "right")}
             </G>
             <G x={marginLeft+labelsWidthLeft} y={marginTop} width={chartWidth} height={chartHeight}>
-              {drawXAxis(chartArea, chartValueScale, xLabelsLeft)}
-              {drawYAxes(chartArea, points)}
-              {drawHighlights(chartArea, points.length, highlights)}
+              {this.drawXAxis(chartArea, chartValueScale, xLabelsLeft)}
+              {this.drawYAxes(chartArea, points)}
+              {this.drawHighlights(chartArea, points.length, highlights)}
 
               
-              {drawChartArea(chartArea, chartValueScaleRight, rightPoints, rightChartColor)}
-              {drawChartLine(chartArea, chartValueScale, points, leftChartColor)}
+              {this.drawChartArea(chartArea, chartValueScaleRight, rightPoints, rightChartColor)}
+              {this.drawChartLine(chartArea, chartValueScale, points, leftChartColor)}
               <Path d={rightRefShape} stroke={rightRefColor} strokeWidth="1" fill="none"/>
               <Path d={leftRefShape} stroke={leftRefColor} strokeWidth="1" fill="none"/>
             </G>
 
             <G x={marginLeft+labelsWidthLeft} y={marginTop+chartHeight} width={chartArea.width} height={labelsBottomHeight}>
-              {drawXLabels(chartArea, times)}
+              {this.drawXLabels(chartArea, times)}
             </G>
 
             <G x={bottomArea.x} y={bottomArea.y} width={bottomArea.width} height={bottomArea.height}>
