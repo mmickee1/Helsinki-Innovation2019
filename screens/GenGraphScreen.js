@@ -37,6 +37,7 @@ export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <SectionList
+        style={styles.child}
         sections={DATA}
         keyExtractor={(item, index) => item + index}
         renderItem={({ item }) => <Item title={item} />}
@@ -52,8 +53,14 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    flexWrap: 'wrap',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 16,
     marginHorizontal: 16,
+  },
+  child: {
+    flexBasis: "50%",
   },
   header: {
     fontSize: 32,
@@ -65,12 +72,13 @@ const styles = StyleSheet.create({
     color: '#ff0000',
     width: 150,
     height: 150,
-    paddingBottom: 20,
     textAlign: 'center',
     backgroundColor: '#ff0000',
     borderRadius: 100,
     borderWidth: 1,
-    borderColor: '#fff'
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   value: {
     marginBottom: 15,
