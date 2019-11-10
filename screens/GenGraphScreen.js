@@ -8,15 +8,18 @@ import {
 } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 
-const DATA = [
+const DATALEFT = [
   {
-    title: 'All Graphs',
+    title: 'All graphs',
     data: ['Energian kulutus', 'Lämpötila', 'Tyyppi'],
-  },
+  }
+];
+
+const DATARIGHT = [
   {
     data: ['CO2-Hiukkaset', 'PM10-Hiukkaset', 'VOC-hiukkaset'],
   },
-];
+]
 
 function Item({ title }) {
   return (
@@ -38,7 +41,17 @@ export default function App() {
     <SafeAreaView style={styles.container}>
       <SectionList
         style={styles.child}
-        sections={DATA}
+        sections={DATALEFT}
+        keyExtractor={(item, index) => item + index}
+        renderItem={({ item }) => <Item title={item} />}
+        renderSectionHeader={({ section: { title } }) => (
+          <Text style={styles.header}>{title}</Text>
+        )}
+
+      />
+      <SectionList
+        style={styles.childright}
+        sections={DATARIGHT}
         keyExtractor={(item, index) => item + index}
         renderItem={({ item }) => <Item title={item} />}
         renderSectionHeader={({ section: { title } }) => (
@@ -60,7 +73,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   child: {
-    flexBasis: "50%",
+    flexBasis: '50%',
+  },
+  childright: {
+    flexBasis: '50%',
+    width: '50%'
   },
   header: {
     fontSize: 32,
