@@ -230,30 +230,34 @@ export class Chart extends React.Component {
   
 
   render() {
+    let width = this.state.width;
+    let height = this.state.height;
+
     let marginLeft = 5;
     let marginRight = 5;
     let marginTop = 50;
     let marginBottom = 50;
 
-    let width = this.state.width;
-    let height = this.state.height;
-
     let labelsWidthLeft = 20;
     let labelsWidthRight = 20;
     let labelsBottomHeight = 30;
-    let labelsHeight = height;
+    
+    
+
     let chartWidth = width - labelsWidthLeft - labelsWidthRight - marginLeft - marginRight;
     let chartHeight = height - marginTop - marginBottom - labelsBottomHeight;
 
-    let leftChartColor = "orange";
-    let rightChartColor = "magenta";
-    let leftRefColor = "blue";
-    let rightRefColor = "green";
-    let leftTitle = "Lämpötila";
-    let leftUnit = "°C";
-    let rightTitle = "CO2";
-    let rightUnit = "ppm";
+    let leftChartColor = this.props.config.leftDataColor;
+    let rightChartColor = this.props.config.rightDataColor;
+    let leftRefColor = this.props.config.leftRefColor;
+    let rightRefColor = this.props.config.rightRefColor;
+    let leftTitle = this.props.config.leftDataTitle;
+    let leftUnit = this.props.config.leftDataUnit;
+    let rightTitle = this.props.config.rightDataTitle;
+    let rightUnit = this.props.config.rightDataUnit;
 
+
+    /*
     const data = [
       {label: "8:00", point: [20, 0]},
       {label: "9:00", point: [18, 50]},
@@ -270,6 +274,12 @@ export class Chart extends React.Component {
       {label: "20:00", point: [30, 0]},
       {label: "21:00", point: [32, 0]},
     ];
+    */
+
+    const data = this.props.data;
+    if (!data) {
+      return (<View></View>);
+    }
 
 
     const chartArea = {x: 0, y: 0, width: chartWidth, height: chartHeight};
