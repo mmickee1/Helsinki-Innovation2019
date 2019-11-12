@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import {Chart} from '../chart.js';
+import {Chart} from '../components/chart.js';
 export default {
   components: {
     Chart,

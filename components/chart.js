@@ -39,12 +39,12 @@ export class Chart extends React.Component {
     return ypoint;
   }
   
-  drawChartLine = (area, valueScale, points, color) => {
+  drawChartLine = (area, valueScale, data, dataPoint, color) => {
     let path = "";
   
-    for (let i=0; i < points.length; i++) {
-      let xpoint = this.generateChartX(area, points.length, i);
-      let ypoint = this.generateChartY(area, valueScale, points[i]);
+    for (let i=0; i < data.length; i++) {
+      let xpoint = this.generateChartX(area, data.length, i);
+      let ypoint = this.generateChartY(area, valueScale, data[i].point[dataPoint]);
   
       let cmd = i == 0 ? 'M' : 'L';
       path += `${cmd} ${xpoint} ${ypoint} `;
@@ -57,17 +57,17 @@ export class Chart extends React.Component {
     );
   };
   
-  drawChartArea = (area, valueScale, points, color) => {
-    let path = `M ${this.generateChartX(area, points.length, 0)} ${this.generateChartY(area, valueScale, 0)}`;
+  drawChartArea = (area, valueScale, data, dataPoint, color) => {
+    let path = `M ${this.generateChartX(area, data.length, 0)} ${this.generateChartY(area, valueScale, 0)}`;
   
-    for (let i=0; i < points.length; i++) {
-      let xpoint = this.generateChartX(area, points.length, i);
-      let ypoint = this.generateChartY(area, valueScale, points[i]);
+    for (let i=0; i < data.length; i++) {
+      let xpoint = this.generateChartX(area, data.length, i);
+      let ypoint = this.generateChartY(area, valueScale, data[i].point[dataPoint]);
   
       path += `L ${xpoint} ${ypoint} `;
     }
   
-    path += `L ${this.generateChartX(area, points.length, points.length-1)} ${this.generateChartY(area, valueScale, 0)}`;
+    path += `L ${this.generateChartX(area, data.length, data.length-1)} ${this.generateChartY(area, valueScale, 0)}`;
     path += "Z";
   
     return(
@@ -83,7 +83,7 @@ export class Chart extends React.Component {
         {values.map((item, index) => {
           let stroke, strokeWidth, strokeDashes;
   
-          if (item === 0) {
+          if (item.l === 0) {
             stroke = "black";
             strokeWidth = "1";
             strokeDashes = "";
@@ -93,10 +93,10 @@ export class Chart extends React.Component {
             strokeDashes = "5, 5";
           }
   
-          let lineY = this.generateChartY(chartArea, chartValueScale, item);
+          let lineY = this.generateChartY(chartArea, chartValueScale, item.l);
           return(
             <Path
-              key={`x${item}`}
+              key={`x${item.l}`}
               d={`M ${chartArea.x} ${lineY} h ${chartArea.width}`}
               strokeWidth={strokeWidth}
               stroke={stroke}
@@ -127,12 +127,30 @@ export class Chart extends React.Component {
       </G>
     );
   }
+
+  drawYLabels2 = (chartArea, valueScaleLeft, valueScaleRight, labels) => {
+    return(
+      <G x="4">
+        {labels.map((item, index) => {
+          let leftY = this.generateChartY(chartArea, valueScaleLeft, item.l);
+          let rightY = this.generateChartY(chartArea, valueScaleRight, item.r);
+
+          return(
+            <G key={`lab${index}`}>
+              <SVGText x="10" y={leftY} fontSize="8" textAnchor="end">{item.l}</SVGText>
+              <SVGText x={chartArea.width+20} y={rightY} fontSize="8" textAnchor="start">{item.r}</SVGText>
+            </G>  
+          );
+        })}
+      </G>
+    )
+  }
   
-  drawXLabels = (chartArea, labels) => {
+  drawXLabels = (chartArea, data) => {
     return(
       <G>
-        {labels.map((item, index) => {
-          let x = this.generateChartX(chartArea, labels.length, index);
+        {data.map((item, index) => {
+          let x = this.generateChartX(chartArea, data.length, index);
           return(
             <SVGText
               key={`xx${index}`}
@@ -140,9 +158,9 @@ export class Chart extends React.Component {
               y={0}
               fontSize="8"
               textAnchor="end"
-              transform={`translate(${x},4) rotate(-90 0,0)`}
+              transform={`translate(${x+3},4) rotate(-90 0,0)`}
             >
-              {item}
+              {item.label}
             </SVGText>
           ); 
         })}
@@ -211,6 +229,17 @@ export class Chart extends React.Component {
     );
   }
 
+  generateXLabels = (valueScaleLeft, valueScaleRight, numLabels) => {
+    const labels = [];
+    const yDeltaLeft = (valueScaleLeft.max - valueScaleLeft.min) / numLabels;
+    const yDeltaRight = (valueScaleRight.max - valueScaleRight.min) / numLabels;
+    for (let i=0; i < numLabels; i++) {
+      let label = {l: parseInt(i * yDeltaLeft), r: parseInt(i * yDeltaRight)};
+      labels.push(label);
+    }
+    return labels;
+  }
+
   
 
   render() {
@@ -240,25 +269,43 @@ export class Chart extends React.Component {
 
 
 
-    let points = [20, 18, 22, 23, 25, 10, 12, 10, 22, 23, 25, 27, 30, 32];
-    let rightPoints = [0, 50, 75, 50, 50, 100, 120, 130, 200, 180, 190, 50, 0, 0];
+    //let points = [20, 18, 22, 23, 25, 10, 12, 10, 22, 23, 25, 27, 30, 32];
+    //let rightPoints = [0, 50, 75, 50, 50, 100, 120, 130, 200, 180, 190, 50, 0, 0];
 
-    let times = ["8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"];
+    //let times = ["8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"];
+
+    const data = [
+      {label: "8:00", point: [20, 0]},
+      {label: "9:00", point: [18, 50]},
+      {label: "10:00", point: [22, 75]},
+      {label: "11:00", point: [23, 50]},
+      {label: "12:00", point: [25, 50]},
+      {label: "13:00", point: [10, 100]},
+      {label: "14:00", point: [12, 120]},
+      {label: "15:00", point: [10, 130]},
+      {label: "16:00", point: [22, 200]},
+      {label: "17:00", point: [23, 180]},
+      {label: "18:00", point: [25, 190]},
+      {label: "19:00", point: [27, 50]},
+      {label: "20:00", point: [30, 0]},
+      {label: "21:00", point: [32, 0]},
+    ];
 
 
     let chartArea = {x: 0, y: 0, width: chartWidth, height: chartHeight};
-    let chartValueScale = {min: 0, max: 45};
+    let chartValueScaleLeft = {min: 0, max: 40};
     let chartValueScaleRight = {min: 0, max: 250};
 
-    let leftRefShape = `M 0 ${this.generateChartY(chartArea, chartValueScale, 22)} h ${chartWidth}`;
+    let leftRefShape = `M 0 ${this.generateChartY(chartArea, chartValueScaleLeft, 22)} h ${chartWidth}`;
     let rightRefShape = `M 0 ${this.generateChartY(chartArea, chartValueScaleRight, 100)} h ${chartWidth}`;
 
     let highlights = [
       {startColumn: 4, numColumns: 4, color: "orange", opacity: "0.4", title: "jousto"},
     ];
 
-    let xLabelsLeft = [0, 10, 20, 30, 40];
-    let xLabelsRight = [0, 50, 100, 150, 200];
+    let numXLabels = 4;
+    const xLabels = this.generateXLabels(chartValueScaleLeft, chartValueScaleRight, numXLabels);
+
 
     let bottomArea = {
       x: labelsWidthLeft,
@@ -272,33 +319,38 @@ export class Chart extends React.Component {
       <View style={{width: '100%', height: '100%', backgroundColor: '#f8f8f8'}} onLayout={this.onLayout}>
         <Svg width={width} height={height}>
           <G>
-            <SVGText x={2} y={12} fontSize="10" textAnchor="start">{leftTitle}</SVGText>
-            <SVGText x={2} y={12+14} fontSize="14" textAnchor="start">{leftUnit}</SVGText>
+            <SVGText x={4} y={12} fontSize="10" textAnchor="start">{leftTitle}</SVGText>
+            <SVGText x={4} y={12+14} fontSize="14" textAnchor="start">{leftUnit}</SVGText>
 
-            <SVGText x={width-2} y={12} fontSize="10" textAnchor="end">{rightTitle}</SVGText>
-            <SVGText x={width-2} y={12+14} fontSize="14" textAnchor="end">{rightUnit}</SVGText>
+            <SVGText x={width-4} y={12} fontSize="10" textAnchor="end">{rightTitle}</SVGText>
+            <SVGText x={width-4} y={12+14} fontSize="14" textAnchor="end">{rightUnit}</SVGText>
 
+            {/*
             <G x={marginLeft} y={marginTop} width={labelsWidthLeft} height={labelsHeight}>
-              {this.drawYLabels(chartArea, chartValueScale, xLabelsLeft, "left")}
+              {this.drawYLabels(chartArea, chartValueScaleLeft, xLabelsLeft, "left")}
               
             </G>
             <G x={width-marginRight-labelsWidthRight} y={marginTop} width={labelsWidthRight} height={labelsHeight}>
               {this.drawYLabels(chartArea, chartValueScaleRight, xLabelsRight, "right")}
+            </G>*/}
+            <G x={marginLeft} y={marginTop}>
+              {this.drawYLabels2(chartArea, chartValueScaleLeft, chartValueScaleRight, xLabels)}
             </G>
+
             <G x={marginLeft+labelsWidthLeft} y={marginTop} width={chartWidth} height={chartHeight}>
-              {this.drawXAxis(chartArea, chartValueScale, xLabelsLeft)}
-              {this.drawYAxes(chartArea, points)}
-              {this.drawHighlights(chartArea, points.length, highlights)}
+              {this.drawXAxis(chartArea, chartValueScaleLeft, xLabels)}
+              {this.drawYAxes(chartArea, data)}
+              {this.drawHighlights(chartArea, data.length, highlights)}
 
               
-              {this.drawChartArea(chartArea, chartValueScaleRight, rightPoints, rightChartColor)}
-              {this.drawChartLine(chartArea, chartValueScale, points, leftChartColor)}
+              {this.drawChartArea(chartArea, chartValueScaleRight, data, 1, rightChartColor)}
+              {this.drawChartLine(chartArea, chartValueScaleLeft, data, 0, leftChartColor)}
               <Path d={rightRefShape} stroke={rightRefColor} strokeWidth="1" fill="none"/>
               <Path d={leftRefShape} stroke={leftRefColor} strokeWidth="1" fill="none"/>
             </G>
 
             <G x={marginLeft+labelsWidthLeft} y={marginTop+chartHeight} width={chartArea.width} height={labelsBottomHeight}>
-              {this.drawXLabels(chartArea, times)}
+              {this.drawXLabels(chartArea, data)}
             </G>
 
             <G x={bottomArea.x} y={bottomArea.y} width={bottomArea.width} height={bottomArea.height}>
