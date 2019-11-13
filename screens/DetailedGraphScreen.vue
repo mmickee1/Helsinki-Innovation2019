@@ -17,6 +17,7 @@ import {Chart} from '../components/chart.js';
 export default {
   data: function() {
     return {
+      /*
       chartData: [
         {label: "8:00", point: [20, 0]},
         {label: "9:00", point: [18, 50]},
@@ -32,7 +33,8 @@ export default {
         {label: "19:00", point: [27, 50]},
         {label: "20:00", point: [30, 0]},
         {label: "21:00", point: [32, 0]},
-      ],
+      ],*/
+      chartData: [],
       chartConfig: {
         leftDataColor: "orange",
         rightDataColor: "magenta",
@@ -44,6 +46,56 @@ export default {
         rightDataUnit: "ppm",
       }
     }
+  },
+  async mounted() {
+    console.log("mounttas");
+    const miResponse = await fetch("https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetMeasurementInfo/?$token=L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU=&BuildingID=3022");
+    const measureInfo = await miResponse.json();
+
+    const tempDatapoints = [];
+
+    for (let i=0; i < measureInfo.length; i++) {
+      const name = measureInfo[i].Name;
+      if (name.endsWith('_temperature')) {
+        const dataPointId = measureInfo[i].DataPointID;
+        tempDatapoints.push({datapoint: dataPointId, name: name});
+      }
+    }
+    
+    console.log(tempDatapoints);
+
+    const tempResp = await fetch("https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetMeasurementDataByIDs/?$token=L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU=&Building=3022&DataPointIDs=83593&StartTime=2019-06-01&EndTime=2019-06-02");
+    const tempInfo = await tempResp.json();
+
+    console.log(tempInfo.length);
+
+    let numEntries = 12;
+
+    const arrayDelta = parseInt(tempInfo.length / numEntries);
+    let arrayIndex = 0;
+
+    const chartData = [];
+    for (let i=0; i < numEntries; i++) {
+      const timestamp = tempInfo[arrayIndex].Timestamp;
+      const tempvalue = tempInfo[arrayIndex].Value;
+
+      const date = new Date(timestamp);
+
+      const timestring = `${this.formatNumber(date.getHours())}:${this.formatNumber(date.getMinutes())}`;
+
+      chartData.push({label: timestring, point: [tempvalue, tempvalue]});
+      arrayIndex += arrayDelta;
+    }
+
+    console.log(chartData);
+
+    this.chartData = chartData;
+
+  },
+  methods: {
+    formatNumber(number) {
+      return (number < 10 ? '0' : '') + number;
+	  }
   },
   components: {
     Chart,

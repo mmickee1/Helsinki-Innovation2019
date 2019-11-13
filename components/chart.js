@@ -6,6 +6,7 @@ import Svg, {
   Rect,
   G,
   Path,
+  Circle,
   Text as SVGText
 } from 'react-native-svg';
 
@@ -39,7 +40,7 @@ export class Chart extends React.Component {
     return ypoint;
   }
   
-  drawChartLine = (area, valueScale, data, dataPoint, color) => {
+  drawLineChart = (area, valueScale, data, dataPoint, color) => {
     let path = "";
   
     for (let i=0; i < data.length; i++) {
@@ -57,7 +58,7 @@ export class Chart extends React.Component {
     );
   };
   
-  drawChartArea = (area, valueScale, data, dataPoint, color) => {
+  drawAreaChart = (area, valueScale, data, dataPoint, color) => {
     let path = `M ${this.generateChartX(area, data.length, 0)} ${this.generateChartY(area, valueScale, 0)}`;
   
     for (let i=0; i < data.length; i++) {
@@ -73,6 +74,39 @@ export class Chart extends React.Component {
     return(
       <G>
         <Path d={path} stroke="transparent" strokeWidth="0" fill={color} opacity="0.5"/>
+      </G>
+    )
+  }
+
+  drawBarChart = (area, valueScale, data, dataPoint, color) => {
+    const barWidth = (area.width / data.length) - 4;
+    let bars = [];
+    for (let i=0; i < data.length-1; i++) {
+      bars.push(data[i]);
+    }
+
+    return(
+      <G>
+        {bars.map((item, index) => {
+          let xpoint = this.generateChartX(area, data.length, index);
+          let ypoint = this.generateChartY(area, valueScale, item.point[dataPoint]);
+          let barHeight = area.height - ypoint;
+          return(
+            <Rect
+              key={`bar${index}`}
+              x={xpoint+3}
+              y={ypoint}
+              rx="0"
+              ry="0"
+              width={barWidth}
+              height={barHeight}
+              fill={color}
+              strokeWidth="0"
+              opacity="0.5"
+            >
+            </Rect>
+          ); 
+        })}
       </G>
     )
   }
@@ -220,10 +254,15 @@ export class Chart extends React.Component {
     return labels;
   }
 
-  drawReferenceLine = (chartArea, valueScale, refValue, color) => {
-    const pathShape = `M 0 ${this.generateChartY(chartArea, valueScale, refValue)} h ${chartArea.width}`;
+  drawReferenceLine = (chartArea, valueScale, refValue, color, side) => {
+    const lineY = parseInt(this.generateChartY(chartArea, valueScale, refValue));
+    const ballX = side === "left" ? 0 : chartArea.width;
+    const pathShape = `M 0 ${lineY} h ${chartArea.width}`;
     return(
-      <Path d={pathShape} stroke={color} strokeWidth="1" fill="none"/>
+      <G>
+        <Path d={pathShape} stroke={color} strokeWidth="1" fill="none"/>
+        <Circle cx={ballX} cy={lineY} r="3" fill={color}/>
+      </G>
     );
   }
 
@@ -289,9 +328,16 @@ export class Chart extends React.Component {
     const leftReferenceValue = 22;
     const rightReferenceValue = 100;
 
+    let highlights = this.props.highlights;
+    if (!highlights) {
+      highlights = [];
+    }
+
+    /*
     let highlights = [
       {startColumn: 4, numColumns: 4, color: "orange", opacity: "0.4", title: "jousto"},
     ];
+    */
 
     const numXLabels = 4;
     const xLabels = this.generateXLabels(chartValueScaleLeft, chartValueScaleRight, numXLabels);
@@ -327,11 +373,12 @@ export class Chart extends React.Component {
               {this.drawYAxes(chartArea, data)}
               {this.drawHighlights(chartArea, data.length, highlights)}
               
-              {this.drawChartArea(chartArea, chartValueScaleRight, data, 1, rightChartColor)}
-              {this.drawChartLine(chartArea, chartValueScaleLeft, data, 0, leftChartColor)}
+              {/*this.drawAreaChart(chartArea, chartValueScaleRight, data, 1, rightChartColor)*/}
+              {this.drawBarChart(chartArea, chartValueScaleRight, data, 1, rightChartColor)}
+              {this.drawLineChart(chartArea, chartValueScaleLeft, data, 0, leftChartColor)}
               
-              {this.drawReferenceLine(chartArea, chartValueScaleRight, rightReferenceValue, rightRefColor)}
-              {this.drawReferenceLine(chartArea, chartValueScaleLeft, leftReferenceValue, leftRefColor)}
+              {this.drawReferenceLine(chartArea, chartValueScaleRight, rightReferenceValue, rightRefColor, "right")}
+              {this.drawReferenceLine(chartArea, chartValueScaleLeft, leftReferenceValue, leftRefColor, "left")}
             </G>
 
             {/* Draw labels in X-direction */}
