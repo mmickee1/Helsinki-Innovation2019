@@ -48,26 +48,19 @@ export default {
     }
   },
   async mounted() {
-    console.log("mounttas");
     const miResponse = await fetch("https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetMeasurementInfo/?$token=L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU=&BuildingID=3022");
     const measureInfo = await miResponse.json();
 
-    const tempDatapoints = [];
-
-    for (let i=0; i < measureInfo.length; i++) {
-      const name = measureInfo[i].Name;
-      if (name.endsWith('_temperature')) {
-        const dataPointId = measureInfo[i].DataPointID;
-        tempDatapoints.push({datapoint: dataPointId, name: name});
-      }
-    }
-    
+    const tempDatapoints = this.findDatapointsByType(measureInfo, "_temperature");
     console.log(tempDatapoints);
+    const co2Datapoints = this.findDatapointsByType(measureInfo, "_co2");
+    console.log(co2Datapoints);
 
-    const tempResp = await fetch("https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetMeasurementDataByIDs/?$token=L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU=&Building=3022&DataPointIDs=83593&StartTime=2019-06-01&EndTime=2019-06-02");
-    const tempInfo = await tempResp.json();
+    const tempInfo = await this.getBuildingMeasurements(3022, "83593", "2019-06-01", "2019-06-02");
+    const co2Info = await this.getBuildingMeasurements(3022, "83591", "2019-06-01", "2019-06-02");
 
     console.log(tempInfo.length);
+    console.log(co2Info.length);
 
     let numEntries = 12;
 
@@ -79,11 +72,13 @@ export default {
       const timestamp = tempInfo[arrayIndex].Timestamp;
       const tempvalue = tempInfo[arrayIndex].Value;
 
+      const co2value = co2Info[arrayIndex].Value;
+
       const date = new Date(timestamp);
 
       const timestring = `${this.formatNumber(date.getHours())}:${this.formatNumber(date.getMinutes())}`;
 
-      chartData.push({label: timestring, point: [tempvalue, tempvalue]});
+      chartData.push({label: timestring, point: [tempvalue, co2value]});
       arrayIndex += arrayDelta;
     }
 
@@ -95,7 +90,33 @@ export default {
   methods: {
     formatNumber(number) {
       return (number < 10 ? '0' : '') + number;
-	  }
+    },
+    findDatapointsByType(data, type) {
+      const datapoints = [];
+      for (let i=0; i < data.length; i++) {
+        const name = data[i].Name;
+        if (name.endsWith(type)) {
+          const dataPointId = data[i].DataPointID;
+          datapoints.push({datapoint: dataPointId, name: name});
+        }
+      }
+      return datapoints;
+    },
+    getBuildingMeasurements(buildingID, datapoints, startTime, endTime) {
+      return new Promise(async (resolve, reject) => {
+        try {
+          const baseUrl = "https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetMeasurementDataByIDs/";
+          const token = "L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU=";
+          const response = await fetch(`${baseUrl}?$token=${token}&Building=${buildingID}&DataPointIDs=${datapoints}&StartTime=${startTime}&EndTime=${endTime}`);
+          let measurements = await response.json();
+          resolve(measurements);
+        }
+        catch (exception) {
+          console.log(exception);
+          reject(exception);
+        }
+      });
+    }
   },
   components: {
     Chart,

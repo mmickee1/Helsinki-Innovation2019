@@ -142,7 +142,7 @@ export class Chart extends React.Component {
     );
   }
 
-  drawYLabels = (chartArea, valueScaleLeft, valueScaleRight, labels) => {
+  drawYLabels = (chartArea, valueScaleLeft, valueScaleRight, labels, color) => {
     return(
       <G x="4">
         {labels.map((item, index) => {
@@ -151,8 +151,8 @@ export class Chart extends React.Component {
 
           return(
             <G key={`lab${index}`}>
-              <SVGText x="10" y={leftY} fontSize="8" textAnchor="end">{item.l}</SVGText>
-              <SVGText x={chartArea.width+20} y={rightY} fontSize="8" textAnchor="start">{item.r}</SVGText>
+              <SVGText x="10" y={leftY} fontSize="8" fontWeight="bold" textAnchor="end" fill={color}>{item.l}</SVGText>
+              <SVGText x={chartArea.width+20} y={rightY} fontSize="8" fontWeight="bold" textAnchor="start" fill={color}>{item.r}</SVGText>
             </G>  
           );
         })}
@@ -160,7 +160,7 @@ export class Chart extends React.Component {
     )
   }
   
-  drawXLabels = (chartArea, data) => {
+  drawXLabels = (chartArea, data, color) => {
     return(
       <G>
         {data.map((item, index) => {
@@ -173,6 +173,7 @@ export class Chart extends React.Component {
               fontSize="8"
               textAnchor="end"
               transform={`translate(${x+3},4) rotate(-90 0,0)`}
+              fill={color}
             >
               {item.label}
             </SVGText>
@@ -323,10 +324,10 @@ export class Chart extends React.Component {
 
     const chartArea = {x: 0, y: 0, width: chartWidth, height: chartHeight};
     const chartValueScaleLeft = {min: 0, max: 40};
-    const chartValueScaleRight = {min: 0, max: 250};
+    const chartValueScaleRight = {min: 0, max: 1000};
 
     const leftReferenceValue = 22;
-    const rightReferenceValue = 100;
+    const rightReferenceValue = 400;
 
     let highlights = this.props.highlights;
     if (!highlights) {
@@ -362,9 +363,15 @@ export class Chart extends React.Component {
             <SVGText x={width-4} y={12} fontSize="10" textAnchor="end">{rightTitle}</SVGText>
             <SVGText x={width-4} y={12+14} fontSize="14" textAnchor="end">{rightUnit}</SVGText>
 
+            {/*
+            <Rect x={0} y={marginTop} rx="0" ry="0" width={labelsWidthLeft+marginLeft} height={chartArea.height+2} fill={leftChartColor}/>
+            <Rect x={width-labelsWidthRight-marginRight} y={marginTop} rx="0" ry="0" width={labelsWidthRight+marginRight} height={chartArea.height+2} fill={rightChartColor}/>
+            */}
+
             {/* Draw labels in Y-direction */}
             <G x={marginLeft} y={marginTop}>
-              {this.drawYLabels(chartArea, chartValueScaleLeft, chartValueScaleRight, xLabels)}
+              
+              {this.drawYLabels(chartArea, chartValueScaleLeft, chartValueScaleRight, xLabels, "black")}
             </G>
 
             {/* Draw the main chart */}
@@ -373,8 +380,8 @@ export class Chart extends React.Component {
               {this.drawYAxes(chartArea, data)}
               {this.drawHighlights(chartArea, data.length, highlights)}
               
-              {/*this.drawAreaChart(chartArea, chartValueScaleRight, data, 1, rightChartColor)*/}
-              {this.drawBarChart(chartArea, chartValueScaleRight, data, 1, rightChartColor)}
+              {this.drawAreaChart(chartArea, chartValueScaleRight, data, 1, rightChartColor)}
+              {/*this.drawBarChart(chartArea, chartValueScaleRight, data, 1, rightChartColor)*/}
               {this.drawLineChart(chartArea, chartValueScaleLeft, data, 0, leftChartColor)}
               
               {this.drawReferenceLine(chartArea, chartValueScaleRight, rightReferenceValue, rightRefColor, "right")}
@@ -383,7 +390,7 @@ export class Chart extends React.Component {
 
             {/* Draw labels in X-direction */}
             <G x={marginLeft+labelsWidthLeft} y={marginTop+chartHeight} width={chartArea.width} height={labelsBottomHeight}>
-              {this.drawXLabels(chartArea, data)}
+              {this.drawXLabels(chartArea, data, "black")}
             </G>
 
             {/* Draw chart explanations in the bottom */}
@@ -392,14 +399,14 @@ export class Chart extends React.Component {
                 <Rect x={0} y={0} rx="2" ry="2" width="14" height="14" stroke="black" strokeWidth="0.5" fill={leftChartColor}/>
                 <SVGText x={18} y={10} fontSize="8">{leftTitle}</SVGText>
                 <Rect x={0} y={20} rx="2" ry="2" width="14" height="14" stroke="black" strokeWidth="0.5" fill={leftRefColor}/>
-                <SVGText x={18} y={20+10} fontSize="8">{`${leftTitle} (vertailuarvo)`}</SVGText>
+                <SVGText x={18} y={20+10} fontSize="8">{`${leftTitle} (tavoitearvo)`}</SVGText>
               </G>
 
               <G x={4 + bottomArea.width/2} y="8">
                 <Rect x={0} y={0} rx="2" ry="2" width="14" height="14" stroke="black" strokeWidth="0.5" fill={rightChartColor}/>
                 <SVGText x={18} y={10} fontSize="8">{rightTitle}</SVGText>
                 <Rect x={0} y={20} rx="2" ry="2" width="14" height="14" stroke="black" strokeWidth="0.5" fill={rightRefColor}/>
-                <SVGText x={18} y={20+10} fontSize="8">{`${rightTitle} (vertailuarvo)`}</SVGText>
+                <SVGText x={18} y={20+10} fontSize="8">{`${rightTitle} (tavoitearvo)`}</SVGText>
               </G>
             </G>
           </G>
