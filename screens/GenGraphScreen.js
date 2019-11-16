@@ -31,155 +31,12 @@ const titles = {
   ]
 };
 
-/*
-function Item({ title }) {
-  return (
-    <View>
-      <TouchableOpacity>
-        <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
-          <Text style={styles.value}>Value {cotwovalue}</Text>
-        </View>
-      </TouchableOpacity>
-      <View>
-        <Text style={styles.title}>{title}</Text>
-      </View>
-    </View>
-  );
-}*/
-
-export default function App() {
-  //const [covalue, setCoValue] = useState(0)
-  //setCoValue(cotwovalue)
-  return (
-    /*<SafeAreaView style={styles.container}>
-      <SectionList
-        style={styles.child}
-        sections={DATALEFT}
-        keyExtractor={(item, index) => item + index}
-        renderItem={({ item }) => <Item title={item} />}
-        renderSectionHeader={({ section: { title } }) => (
-          <Text style={styles.header}>{title}</Text>
-        )}
-
-      />
-      <SectionList
-        style={styles.childright}
-        sections={DATARIGHT}
-        keyExtractor={(item, index) => item + index}
-        renderItem={({ item }) => <Item title={item} />}
-        renderSectionHeader={({ section: { title } }) => (
-          <Text style={styles.header}>{title}</Text>
-        )}
-
-      />
-    </SafeAreaView> */
-
-    <View style={styles.container}>
-      <ScrollView style={styles.child}>
-        <TouchableOpacity>
-          <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
-            <Text style={styles.value}>Value</Text>
-          </View>
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.title}>{titles.titles[0].energy}</Text>
-        </View>
-        <TouchableOpacity>
-          <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
-            <Text style={styles.value}>Value</Text>
-          </View>
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.title}>{titles.titles[1].temperature}</Text>
-        </View>
-        <TouchableOpacity>
-          <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
-            <Text style={styles.value}>Value</Text>
-          </View>
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.title}>{titles.titles[2].type}</Text>
-        </View>
-      </ScrollView>
-      <ScrollView style={styles.childright}>
-        <TouchableOpacity>
-          <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
-            <Text style={styles.value}>Value </Text>
-          </View>
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.title}>{titles.titles[3].co2}</Text>
-        </View>
-        <TouchableOpacity>
-          <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
-            <Text style={styles.value}>Value</Text>
-          </View>
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.title}>{titles.titles[4].pm10}</Text>
-        </View>
-        <TouchableOpacity>
-          <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
-            <Text style={styles.value}>Value </Text>
-          </View>
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.title}>{titles.titles[5].voc}</Text>
-        </View>
-      </ScrollView>
-    </View>
-  );
-}
-
-/*
-CO2 levels from https://www.kane.co.uk/knowledge-centre/what-are-safe-levels-of-co-and-co2-in-rooms
-I received 450-650 from nuuka api
-250-350     ppm	    Normal background concentration in outdoor ambient air
-350-1,000   ppm	    Concentrations typical of occupied indoor spaces with good air exchange
-1,000-2,000 ppm	    Complaints of drowsiness and poor air.
-2,000-5,000 ppm	    Headaches, sleepiness and stagnant, stale, stuffy air. Poor concentration,
-                    loss of attention, increased heart rate and slight nausea may also be present.
-5,000       ppm	    Workplace exposure limit (as 8-hour TWA) in most jurisdictions.
->40,000     ppm	    Exposure may lead to serious oxygen deprivation resulting in permanent brain damage, 
-                    coma, even death.*/
-
 // Make a request for a user with a given ID
 const apitoken = 'L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU='
 const nuukaApi = 'https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/'
 const getMeasurementDataByIDs = 'GetMeasurementDataByIDs/?&Building=2410&DataPointIDs=83511;83519;83527&StartTime=2019-08-01&EndTime=2019-08-30&TimestampTimeZone=UTCOffset&MeasurementSystem=SI&$format=json&$token='
 const datapointerinos = [];
 let datapointerinosvalues = 0;
-let cotwovalue = 0;
-const nuukaDataCO2 = axios.get(nuukaApi + getMeasurementDataByIDs + apitoken)
-  .then(datapoints => {
-    // let self = this;
-    datapoints.data.forEach(function (point) {
-      datapointerinos.push(pointObj = {
-        cotwovalue: point.Value
-      });
-      datapointerinosvalues = datapointerinosvalues + point.Value;
-
-    });
-    //console.log(datapoints);
-  })
-  .catch(function (error) {
-    // handle error
-    console.log(error);
-  })
-  .finally(function () {
-    // always executed
-    //console.log(datapointerinos); //WORKS. Object {"cotwovalue": 485.489,} , ... 
-    console.log(datapointerinosvalues / datapointerinos.length); // length ~64000
-    cotwovalue = datapointerinosvalues / datapointerinos.length; //value is around ~534 ppm
-    console.log(cotwovalue);
-  });
-
-/*
-  .then(function (response) {
-    // handle success
-    console.log(response);
-  })
-  */
 
 /*
 //Performing multiple concurrent requests
@@ -197,6 +54,132 @@ axios.all([getUserAccount(), getUserPermissions()])
 
 //esimerkki co2 arvojen saamisesta
 //https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetMeasurementDataByIDs/?&Building=2410&DataPointIDs=83511;83519;83527&StartTime=2019-08-01&EndTime=2019-08-30&TimestampTimeZone=UTCOffset&MeasurementSystem=SI&$format=json&$token=L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU=
+
+
+/*
+CO2 levels from https://www.kane.co.uk/knowledge-centre/what-are-safe-levels-of-co-and-co2-in-rooms
+I received 450-650 from nuuka api
+250-350     ppm	    Normal background concentration in outdoor ambient air
+350-1,000   ppm	    Concentrations typical of occupied indoor spaces with good air exchange
+1,000-2,000 ppm	    Complaints of drowsiness and poor air.
+2,000-5,000 ppm	    Headaches, sleepiness and stagnant, stale, stuffy air. Poor concentration,
+                    loss of attention, increased heart rate and slight nausea may also be present.
+5,000       ppm	    Workplace exposure limit (as 8-hour TWA) in most jurisdictions.
+>40,000     ppm	    Exposure may lead to serious oxygen deprivation resulting in permanent brain damage, 
+                    coma, even death.*/
+                    
+export default class GenGraphScreen extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      mystate: 'test',
+      co2state: 0,
+      pm10state: 0,
+      vocstate: 0,
+      energystate: 0,
+      temperaturestate: 0,
+      cotwovaluerino: 0
+    }
+  }
+
+  componentDidMount() {
+    console.log('component did mount');
+    axios.get(nuukaApi + getMeasurementDataByIDs + apitoken)
+      .then(datapoints => {
+        // let self = this;
+        datapoints.data.forEach(function (point) {
+          datapointerinos.push(pointObj = {
+            cotwovaluerino: point.Value
+          });
+          datapointerinosvalues = datapointerinosvalues + point.Value;
+        });
+        var co2value = datapointerinosvalues / datapointerinos.length;
+        co2value = co2value.toFixed(0);
+        this.changeState(co2value);
+        console.log('changed state');
+      })
+      .catch(function (error) {
+        console.log(error);
+      })/*
+    .finally(function () {
+      //console.log(datapointerinos); //WORKS. Object {"cotwovalue": 485.489,} , ... 
+      //console.log(datapointerinosvalues / datapointerinos.length); // length ~64000
+      this.state.cotwovaluerino = datapointerinosvalues / datapointerinos.length; //value is around ~534 ppm
+      console.log('changing state');
+      this.changeState();
+      console.log('changed state');
+    });*/
+  }
+
+  testState = () => {
+    this.setState({ mystate: 'updated' })
+  }
+  changeState = (data) => {
+    this.setState({ co2state: data + ' ppm' })
+  }
+
+
+  render() {
+    var x = 0; //näin voi tehdä... laita tähä vaa lisää juttui mitä tarvii
+    return (
+      <View style={styles.container}>
+        <ScrollView style={styles.child}>
+          <TouchableOpacity>
+            <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
+              <Text style={styles.value}>Value</Text>
+            </View>
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>{titles.titles[0].energy}</Text>
+          </View>
+          <TouchableOpacity>
+            <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
+              <Text style={styles.value}>Value</Text>
+            </View>
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>{titles.titles[1].temperature}</Text>
+          </View>
+          <TouchableOpacity>
+            <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
+              <Text style={styles.value}>Value</Text>
+            </View>
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>{titles.titles[2].type}</Text>
+          </View>
+        </ScrollView>
+        <ScrollView style={styles.childright}>
+          <TouchableOpacity>
+            <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
+              <Text style={styles.value}>{this.state.co2state}</Text>
+            </View>
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title} onPress={this.changeState}>{titles.titles[3].co2}</Text>
+          </View>
+          <TouchableOpacity>
+            <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
+              <Text style={styles.value}>{this.state.pm10state}</Text>
+            </View>
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>{titles.titles[4].pm10}</Text>
+          </View>
+          <TouchableOpacity>
+            <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
+              <Text style={styles.value}>Value </Text>
+            </View>
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>{titles.titles[5].voc}</Text>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+}
 
 const styles = StyleSheet.create({
   container: {
