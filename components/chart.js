@@ -268,7 +268,7 @@ export class Chart extends React.Component {
     const labels = [];
     const yDeltaLeft = (valueScaleLeft.max - valueScaleLeft.min) / numLabels;
     const yDeltaRight = (valueScaleRight.max - valueScaleRight.min) / numLabels;
-    console.log(yDeltaLeft);
+    
     for (let i=0; i < numLabels; i++) {
       let xleft = (i * yDeltaLeft) + valueScaleLeft.min;
       let xright = (i * yDeltaRight) + valueScaleRight.min;

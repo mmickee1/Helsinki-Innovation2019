@@ -3,7 +3,9 @@
     <text>{{buildingAddress}}</text>
     <touchable-opacity :on-press="showDatePicker">
       <view class="date-select">
-        <text class="date-select-text">{{currentDate.toLocaleDateString("fi-FI")}}</text>
+        <text class="date-select-text">
+          {{`${currentDate.getDate()}.${currentDate.getMonth()+1}.${currentDate.getFullYear()}`}}
+        </text>
       </view>
     </touchable-opacity>
 
@@ -19,13 +21,17 @@
       :is-visible="datePickerVisible"
       :on-confirm="onDateSelectConfirm"
       :on-cancel="onDateSelectCancel"
+      mode="date"
     />
+
+    <loader-modal :loading="chartLoading"/>
   </view>
 </template>
 
 <script>
 import {Chart} from '../components/chart.js';
 import DateTimePicker from 'react-native-modal-datetime-picker';
+import {LoaderModal} from '../components/loadermodal.js';
 export default {
   data: function() {
     return {
@@ -44,6 +50,7 @@ export default {
       buildingAddress: "",
       currentDate: new Date(),
       datePickerVisible: false,
+      chartLoading: false,
     }
   },
   async mounted() {
@@ -224,12 +231,15 @@ export default {
       });
     },
 
-    onDateSelectConfirm(date) {
+    async onDateSelectConfirm(date) {
       console.log(date);
 
       if (date.toDateString() != this.currentDate.toDateString()) {
         this.currentDate = date;
-        this.updateChart(this.currentDate);
+        
+        this.chartLoading = true;
+        await this.updateChart(this.currentDate);
+        this.chartLoading = false;
       }
       
       this.datePickerVisible = false;
@@ -243,7 +253,8 @@ export default {
   },
   components: {
     Chart,
-    DateTimePicker
+    DateTimePicker,
+    LoaderModal,
   }
 };
 </script>
@@ -277,5 +288,11 @@ export default {
 }
 .date-select-text {
   color: whitesmoke;
+}
+.loader-modal {
+  height: 100%;
+  background-color: transparent;
+  align-content: center;
+  justify-content: center;
 }
 </style>
