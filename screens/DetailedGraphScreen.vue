@@ -1,7 +1,8 @@
 <template>
   <view class="container">
     <text class="heading">Detailed Graph</text>
-    <text>Detailed screen of 1 graph</text>
+    <text>{{buildingAddress}}</text>
+    <text>{{currentDate}}</text>
 
     <view class="chart-container">
       <chart
@@ -44,23 +45,40 @@ export default {
         leftDataUnit: "°C",
         rightDataTitle: "CO2",
         rightDataUnit: "ppm",
-      }
+      },
+      apiToken: "L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU=",
+      buildingAddress: "",
+      currentDate: "",
     }
   },
   async mounted() {
-    const miResponse = await fetch("https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetMeasurementInfo/?$token=L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU=&BuildingID=3022");
+    const buildingInfo = await this.getBuildingInfo(4285);
+    console.log(buildingInfo);
+
+
+
+    let startDate = "2019-06-01";
+    let endDate = "2019-06-02";
+
+    this.currentDate = startDate;
+    this.buildingAddress = buildingInfo.name;
+
+
+
+    const baseUrl = "https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetMeasurementInfo/";
+    const miResponse = await fetch(`${baseUrl}?$token=${this.apiToken}&BuildingID=${buildingInfo.buildingID}`);
     const measureInfo = await miResponse.json();
 
-    const tempDatapoints = this.findDatapointsByType(measureInfo, "_temperature");
-    console.log(tempDatapoints);
-    const co2Datapoints = this.findDatapointsByType(measureInfo, "_co2");
-    console.log(co2Datapoints);
+    const tempDatapoints = this.findDatapointsByType(measureInfo, "indoor conditions: temperature");
+    //console.log(tempDatapoints);
+    const co2Datapoints = this.findDatapointsByType(measureInfo, "indoor conditions: co2");
+    //console.log(co2Datapoints);
 
-    const tempInfo = await this.getBuildingMeasurements(3022, "83593", "2019-06-01", "2019-06-02");
-    const co2Info = await this.getBuildingMeasurements(3022, "83591", "2019-06-01", "2019-06-02");
+    const tempInfo = await this.getBuildingMeasurements(buildingInfo.buildingID, "83556", startDate, endDate);
+    const co2Info = await this.getBuildingMeasurements(buildingInfo.buildingID, "83551", startDate, endDate);
 
-    console.log(tempInfo.length);
-    console.log(co2Info.length);
+//    console.log(tempInfo.length);
+//    console.log(co2Info.length);
 
     let numEntries = 12;
 
@@ -82,7 +100,7 @@ export default {
       arrayIndex += arrayDelta;
     }
 
-    console.log(chartData);
+//    console.log(chartData);
 
     this.chartData = chartData;
 
@@ -94,10 +112,11 @@ export default {
     findDatapointsByType(data, type) {
       const datapoints = [];
       for (let i=0; i < data.length; i++) {
-        const name = data[i].Name;
-        if (name.endsWith(type)) {
+        //const name = data[i].Name;
+        //if (name.endsWith(type)) {
+        if (data[i].Category == type) {
           const dataPointId = data[i].DataPointID;
-          datapoints.push({datapoint: dataPointId, name: name});
+          datapoints.push({datapoint: dataPointId, name: data[i].Name});
         }
       }
       return datapoints;
@@ -106,8 +125,7 @@ export default {
       return new Promise(async (resolve, reject) => {
         try {
           const baseUrl = "https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetMeasurementDataByIDs/";
-          const token = "L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU=";
-          const response = await fetch(`${baseUrl}?$token=${token}&Building=${buildingID}&DataPointIDs=${datapoints}&StartTime=${startTime}&EndTime=${endTime}`);
+          const response = await fetch(`${baseUrl}?$token=${this.apiToken}&Building=${buildingID}&DataPointIDs=${datapoints}&StartTime=${startTime}&EndTime=${endTime}`);
           let measurements = await response.json();
           resolve(measurements);
         }
@@ -116,7 +134,33 @@ export default {
           reject(exception);
         }
       });
-    }
+    },
+    getBuildingInfo(site) {
+      return new Promise(async (resolve, reject) => {
+        try {
+          const baseUrl = "https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetUserBuildings/";
+          const response = await fetch(`${baseUrl}?$token=${this.apiToken}&$format=json`);
+          let info = await response.json();
+          
+          //console.log(info);
+
+          let results = {};
+
+          info.forEach((item) => {
+            if (item.P_SiteNumber == site && item.IsProperty == true) {
+              console.log(item);
+              results = {buildingID: item.BuildingStructureID, name: item.Description};
+            }
+          });
+
+          resolve(results);
+        }
+        catch (exception) {
+          console.log(exception);
+          reject(exception);
+        }
+      });
+    },
   },
   components: {
     Chart,

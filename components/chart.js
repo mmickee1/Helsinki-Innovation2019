@@ -59,7 +59,7 @@ export class Chart extends React.Component {
   };
   
   drawAreaChart = (area, valueScale, data, dataPoint, color) => {
-    let path = `M ${this.generateChartX(area, data.length, 0)} ${this.generateChartY(area, valueScale, 0)}`;
+    let path = `M ${this.generateChartX(area, data.length, 0)} ${this.generateChartY(area, valueScale, valueScale.min)}`;
   
     for (let i=0; i < data.length; i++) {
       let xpoint = this.generateChartX(area, data.length, i);
@@ -68,7 +68,7 @@ export class Chart extends React.Component {
       path += `L ${xpoint} ${ypoint} `;
     }
   
-    path += `L ${this.generateChartX(area, data.length, data.length-1)} ${this.generateChartY(area, valueScale, 0)}`;
+    path += `L ${this.generateChartX(area, data.length, data.length-1)} ${this.generateChartY(area, valueScale, valueScale.min)}`;
     path += "Z";
   
     return(
@@ -249,7 +249,7 @@ export class Chart extends React.Component {
     const yDeltaLeft = (valueScaleLeft.max - valueScaleLeft.min) / numLabels;
     const yDeltaRight = (valueScaleRight.max - valueScaleRight.min) / numLabels;
     for (let i=0; i < numLabels; i++) {
-      let label = {l: parseInt(i * yDeltaLeft), r: parseInt(i * yDeltaRight)};
+      let label = {l: parseInt((i * yDeltaLeft) + valueScaleLeft.min), r: parseInt((i * yDeltaRight) + valueScaleRight.min)};
       labels.push(label);
     }
     return labels;
@@ -323,8 +323,8 @@ export class Chart extends React.Component {
 
 
     const chartArea = {x: 0, y: 0, width: chartWidth, height: chartHeight};
-    const chartValueScaleLeft = {min: 0, max: 40};
-    const chartValueScaleRight = {min: 0, max: 1000};
+    const chartValueScaleLeft = {min: 20, max: 25};
+    const chartValueScaleRight = {min: 400, max: 500};
 
     const leftReferenceValue = 22;
     const rightReferenceValue = 400;
