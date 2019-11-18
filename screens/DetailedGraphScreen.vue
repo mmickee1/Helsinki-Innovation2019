@@ -1,6 +1,5 @@
 <template>
   <view class="container">
-    <text class="heading">Detailed Graph</text>
     <text>{{buildingAddress}}</text>
     <text>{{currentDate}}</text>
 
@@ -18,23 +17,6 @@ import {Chart} from '../components/chart.js';
 export default {
   data: function() {
     return {
-      /*
-      chartData: [
-        {label: "8:00", point: [20, 0]},
-        {label: "9:00", point: [18, 50]},
-        {label: "10:00", point: [22, 75]},
-        {label: "11:00", point: [23, 50]},
-        {label: "12:00", point: [25, 50]},
-        {label: "13:00", point: [10, 100]},
-        {label: "14:00", point: [12, 120]},
-        {label: "15:00", point: [10, 130]},
-        {label: "16:00", point: [22, 200]},
-        {label: "17:00", point: [23, 180]},
-        {label: "18:00", point: [25, 190]},
-        {label: "19:00", point: [27, 50]},
-        {label: "20:00", point: [30, 0]},
-        {label: "21:00", point: [32, 0]},
-      ],*/
       chartData: [],
       chartConfig: {
         leftDataColor: "orange",
@@ -57,8 +39,8 @@ export default {
 
 
 
-    let startDate = "2019-06-01";
-    let endDate = "2019-06-02";
+    let startDate = "2019-06-02";
+    let endDate = "2019-06-03";
 
     this.currentDate = startDate;
     this.buildingAddress = buildingInfo.name;
@@ -77,30 +59,17 @@ export default {
     const tempInfo = await this.getBuildingMeasurements(buildingInfo.buildingID, "83556", startDate, endDate);
     const co2Info = await this.getBuildingMeasurements(buildingInfo.buildingID, "83551", startDate, endDate);
 
-//    console.log(tempInfo.length);
-//    console.log(co2Info.length);
+    console.log(tempInfo.length);
+    //console.log(tempInfo);
 
-    let numEntries = 12;
 
-    const arrayDelta = parseInt(tempInfo.length / numEntries);
-    let arrayIndex = 0;
+    const hourlyTemp = this.makeHourlyData(tempInfo);
+    const hourlyCO2 = this.makeHourlyData(co2Info);
 
     const chartData = [];
-    for (let i=0; i < numEntries; i++) {
-      const timestamp = tempInfo[arrayIndex].Timestamp;
-      const tempvalue = tempInfo[arrayIndex].Value;
-
-      const co2value = co2Info[arrayIndex].Value;
-
-      const date = new Date(timestamp);
-
-      const timestring = `${this.formatNumber(date.getHours())}:${this.formatNumber(date.getMinutes())}`;
-
-      chartData.push({label: timestring, point: [tempvalue, co2value]});
-      arrayIndex += arrayDelta;
+    for (let hour=0; hour < 24; hour++) {
+      chartData.push({label: hourlyTemp[hour].time, point: [hourlyTemp[hour].value, hourlyCO2[hour].value]});
     }
-
-//    console.log(chartData);
 
     this.chartData = chartData;
 
@@ -112,8 +81,6 @@ export default {
     findDatapointsByType(data, type) {
       const datapoints = [];
       for (let i=0; i < data.length; i++) {
-        //const name = data[i].Name;
-        //if (name.endsWith(type)) {
         if (data[i].Category == type) {
           const dataPointId = data[i].DataPointID;
           datapoints.push({datapoint: dataPointId, name: data[i].Name});
@@ -134,6 +101,41 @@ export default {
           reject(exception);
         }
       });
+    },
+    makeHourlyData(rawData) {
+      const indexedData = [];
+
+      // make indexed data
+      rawData.forEach((item) => {
+        const timestamp = new Date(item.Timestamp);
+        const index = (timestamp.getHours() * 60) + timestamp.getMinutes();
+        if (!indexedData[index]) {
+          indexedData[index] = item.Value;
+        }
+      });
+
+      const hourlyData = [];
+
+      // calculate average hourly data from indexed minute data
+      for (let hours=0; hours < 24; hours++) {
+        let sum = 0;
+        let dataCount = 0;
+        for (let mins=0; mins < 60; mins++) {
+          const value = indexedData[(hours*60) + mins];
+          if (value) {
+            sum += value;
+            dataCount++;
+          }
+        }
+
+        let average = 0;
+        if (dataCount > 0) {
+          average = sum / dataCount;
+        }
+
+        hourlyData[hours] = {value: average, time: `${this.formatNumber(hours)}:00`};
+      }
+      return hourlyData;
     },
     getBuildingInfo(site) {
       return new Promise(async (resolve, reject) => {
