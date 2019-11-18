@@ -3,6 +3,8 @@ import React from 'react';
 import {View} from 'react-native';
 
 import Svg, {
+  Defs,
+  ClipPath,
   Rect,
   G,
   Path,
@@ -151,8 +153,26 @@ export class Chart extends React.Component {
 
           return(
             <G key={`lab${index}`}>
-              <SVGText x="10" y={leftY} fontSize="8" fontWeight="bold" textAnchor="end" fill={color}>{item.l}</SVGText>
-              <SVGText x={chartArea.width+20} y={rightY} fontSize="8" fontWeight="bold" textAnchor="start" fill={color}>{item.r}</SVGText>
+              <SVGText
+                x="10"
+                y={leftY}
+                fontSize="8"
+                fontWeight="bold"
+                textAnchor="end"
+                fill={color}
+              >
+                {parseInt(Math.round(item.l))}
+              </SVGText>
+              <SVGText
+                x={chartArea.width+20}
+                y={rightY}
+                fontSize="8"
+                fontWeight="bold" 
+                textAnchor="start"
+                fill={color}
+              >
+                {parseInt(Math.round(item.r))}
+              </SVGText>
             </G>  
           );
         })}
@@ -248,8 +268,11 @@ export class Chart extends React.Component {
     const labels = [];
     const yDeltaLeft = (valueScaleLeft.max - valueScaleLeft.min) / numLabels;
     const yDeltaRight = (valueScaleRight.max - valueScaleRight.min) / numLabels;
+    console.log(yDeltaLeft);
     for (let i=0; i < numLabels; i++) {
-      let label = {l: parseInt((i * yDeltaLeft) + valueScaleLeft.min), r: parseInt((i * yDeltaRight) + valueScaleRight.min)};
+      let xleft = (i * yDeltaLeft) + valueScaleLeft.min;
+      let xright = (i * yDeltaRight) + valueScaleRight.min;
+      let label = {l: xleft, r: xright};
       labels.push(label);
     }
     return labels;
@@ -296,26 +319,6 @@ export class Chart extends React.Component {
     let rightTitle = this.props.config.rightDataTitle;
     let rightUnit = this.props.config.rightDataUnit;
 
-
-    /*
-    const data = [
-      {label: "8:00", point: [20, 0]},
-      {label: "9:00", point: [18, 50]},
-      {label: "10:00", point: [22, 75]},
-      {label: "11:00", point: [23, 50]},
-      {label: "12:00", point: [25, 50]},
-      {label: "13:00", point: [10, 100]},
-      {label: "14:00", point: [12, 120]},
-      {label: "15:00", point: [10, 130]},
-      {label: "16:00", point: [22, 200]},
-      {label: "17:00", point: [23, 180]},
-      {label: "18:00", point: [25, 190]},
-      {label: "19:00", point: [27, 50]},
-      {label: "20:00", point: [30, 0]},
-      {label: "21:00", point: [32, 0]},
-    ];
-    */
-
     const data = this.props.data;
     if (!data) {
       return (<View></View>);
@@ -343,6 +346,7 @@ export class Chart extends React.Component {
     const numXLabels = 4;
     const xLabels = this.generateXLabels(chartValueScaleLeft, chartValueScaleRight, numXLabels);
 
+    console.log(xLabels);
 
     const bottomArea = {
       x: labelsWidthLeft,
@@ -351,10 +355,17 @@ export class Chart extends React.Component {
       height: height - marginTop - chartHeight
     };
 
+    const chartClip = `M 0 0 h ${chartArea.width} v ${chartArea.height} h ${-chartArea.width} Z`;
+
 
     return(
       <View style={{width: '100%', height: '100%', backgroundColor: '#f8f8f8'}} onLayout={this.onLayout}>
         <Svg width={width} height={height}>
+          <Defs>
+            <ClipPath id="chartClip">
+              <Path d={chartClip}/>
+            </ClipPath>
+          </Defs>
           <G>
             {/* Draw chart title and units in left and right */}
             <SVGText x={4} y={12} fontSize="10" textAnchor="start">{leftTitle}</SVGText>
@@ -380,10 +391,12 @@ export class Chart extends React.Component {
               {this.drawYAxes(chartArea, data)}
               {this.drawHighlights(chartArea, data.length, highlights)}
               
-              {this.drawAreaChart(chartArea, chartValueScaleRight, data, 1, rightChartColor)}
-              {/*this.drawBarChart(chartArea, chartValueScaleRight, data, 1, rightChartColor)*/}
-              {this.drawLineChart(chartArea, chartValueScaleLeft, data, 0, leftChartColor)}
-              
+              <G clipPath="url(#chartClip)">
+                {this.drawAreaChart(chartArea, chartValueScaleRight, data, 1, rightChartColor)}
+                {/*this.drawBarChart(chartArea, chartValueScaleRight, data, 1, rightChartColor)*/}
+                {this.drawLineChart(chartArea, chartValueScaleLeft, data, 0, leftChartColor)}
+              </G>
+
               {this.drawReferenceLine(chartArea, chartValueScaleRight, rightReferenceValue, rightRefColor, "right")}
               {this.drawReferenceLine(chartArea, chartValueScaleLeft, leftReferenceValue, leftRefColor, "left")}
             </G>
