@@ -103,7 +103,7 @@ export default class GenGraphScreen extends React.Component {
         });
         var co2value = datapointerinosvalues / datapointerinos.length;
         co2value = co2value.toFixed(0);
-        this.changeState(co2value);
+        this.changeCO2State(co2value);
         console.log('changed state');
       })
       .catch(function (error) {
@@ -114,7 +114,7 @@ export default class GenGraphScreen extends React.Component {
       //console.log(datapointerinosvalues / datapointerinos.length); // length ~64000
       this.state.cotwovaluerino = datapointerinosvalues / datapointerinos.length; //value is around ~534 ppm
       console.log('changing state');
-      this.changeState();
+      this.changeCO2State();
       console.log('changed state');
     });*/
   }
@@ -122,10 +122,13 @@ export default class GenGraphScreen extends React.Component {
   testState = () => {
     this.setState({ mystate: 'updated' })
   }
-  changeState = (data) => {
-    if (data > 500) {
-      console.log('data value over 500');
+  changeCO2State = (data) => {
+    if (data > 0  && data < 1000) {
       this.setState({ co2color: styles.yellowcircle })
+    } else if (data > 1000 && data < 2000) {
+      this.setState({ co2color: styles.redcircle })
+    } else {
+      this.setState({ co2color: styles.greencircle })
     }
     this.setState({ co2state: data + ' ppm' })
   }
