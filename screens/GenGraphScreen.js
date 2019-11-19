@@ -67,7 +67,7 @@ I received 450-650 from nuuka api
 5,000       ppm	    Workplace exposure limit (as 8-hour TWA) in most jurisdictions.
 >40,000     ppm	    Exposure may lead to serious oxygen deprivation resulting in permanent brain damage, 
                     coma, even death.*/
-                    
+
 export default class GenGraphScreen extends React.Component {
 
   constructor(props) {
@@ -79,7 +79,14 @@ export default class GenGraphScreen extends React.Component {
       vocstate: 0,
       energystate: 0,
       temperaturestate: 0,
-      cotwovaluerino: 0
+      cotwovaluerino: 0,
+      typestate: 0,
+      energycolor: styles.greencircle,
+      temperaturecolor: styles.greencircle,
+      co2color: styles.greencircle,
+      pm10color: styles.greencircle,
+      voccolor: styles.greencircle,
+      typecolor: styles.greencircle
     }
   }
 
@@ -116,6 +123,10 @@ export default class GenGraphScreen extends React.Component {
     this.setState({ mystate: 'updated' })
   }
   changeState = (data) => {
+    if (data > 500) {
+      console.log('data value over 500');
+      this.setState({ co2color: styles.yellowcircle })
+    }
     this.setState({ co2state: data + ' ppm' })
   }
 
@@ -125,56 +136,70 @@ export default class GenGraphScreen extends React.Component {
     return (
       <View style={styles.container}>
         <ScrollView style={styles.child}>
+
           <TouchableOpacity>
-            <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
-              <Text style={styles.value}>Value</Text>
+            <View style={[styles.circle, this.state.energycolor]}>
+              <Text style={styles.value}>{this.state.energystate}</Text>
             </View>
           </TouchableOpacity>
           <View>
             <Text style={styles.title}>{titles.titles[0].energy}</Text>
           </View>
+
+
           <TouchableOpacity>
-            <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
-              <Text style={styles.value}>Value</Text>
+            <View style={[styles.circle, this.state.temperaturecolor]}>
+              <Text style={styles.value}>{this.state.temperaturestate}</Text>
             </View>
           </TouchableOpacity>
           <View>
             <Text style={styles.title}>{titles.titles[1].temperature}</Text>
           </View>
+
+
           <TouchableOpacity>
-            <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
-              <Text style={styles.value}>Value</Text>
+            <View style={[styles.circle, this.state.typecolor]}>
+              <Text style={styles.value}>{this.state.typestate}</Text>
             </View>
           </TouchableOpacity>
           <View>
             <Text style={styles.title}>{titles.titles[2].type}</Text>
           </View>
+
         </ScrollView>
+
+
         <ScrollView style={styles.childright}>
+
           <TouchableOpacity>
-            <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
+            <View style={[styles.circle, this.state.co2color]}>
               <Text style={styles.value}>{this.state.co2state}</Text>
             </View>
           </TouchableOpacity>
           <View>
-            <Text style={styles.title} onPress={this.changeState}>{titles.titles[3].co2}</Text>
+            <Text style={styles.title}>{titles.titles[3].co2}</Text>
           </View>
+
+
           <TouchableOpacity>
-            <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
+            <View style={[styles.circle, this.state.pm10color]}>
               <Text style={styles.value}>{this.state.pm10state}</Text>
             </View>
           </TouchableOpacity>
           <View>
             <Text style={styles.title}>{titles.titles[4].pm10}</Text>
           </View>
+
+
           <TouchableOpacity>
-            <View style={[styles.circle, styles.redcircle, styles.greencircle]}>
-              <Text style={styles.value}>Value </Text>
+            <View style={[styles.circle, this.state.voccolor]}>
+              <Text style={styles.value}>{this.state.vocstate} </Text>
             </View>
           </TouchableOpacity>
           <View>
             <Text style={styles.title}>{titles.titles[5].voc}</Text>
           </View>
+
         </ScrollView>
       </View>
     );
