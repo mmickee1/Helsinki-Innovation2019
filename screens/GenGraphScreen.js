@@ -37,16 +37,13 @@ const titles = {
 const apitoken = 'L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU='
 const nuukaApi = 'https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/'
 const getMeasurementDataByID = 'GetMeasurementDataByIDs/?&Building='
-const dataPointIDS = '&DataPointIDs=83511;83519;83527'
+const dataPointIDS = '&DataPointIDs='
 const startTimeStatic = '&StartTime='
 const endTimeStatic = '&EndTime='
 const timeStampZone = '&TimestampTimeZone=UTCOffset&MeasurementSystem=SI&$format=json&$token='
 const datapointerinos = [];
 let datapointerinosvalues = 0;
 
-
-//<ActivityIndicator size="large" color="#0000ff" animating={this.state.loadingState} style={styles.loaderstyle} />
-//ei toiminu viel piilottamine jostain syystä..
 
 /*
 //Performing multiple concurrent requests
@@ -101,9 +98,9 @@ export default class GenGraphScreen extends React.Component {
       typecolor: styles.greencircle,
 
       buildingID: 2410,
-      datapoint1: 1,
-      datapoint2: 2,
-      datapoint3: 3,
+      datapoint1: 83511 + ';',
+      datapoint2: 83519 + ';',
+      datapoint3: 83527 + ';',
       dateStart: '',  //has to be year-month-date
       dateEnd: '',
 
@@ -125,7 +122,6 @@ export default class GenGraphScreen extends React.Component {
       dateEnd:
         year + '-' + month + '-' + date,
     });
-    //getValuesFromNuuka();
   }
 
   testState = () => {
@@ -163,7 +159,10 @@ export default class GenGraphScreen extends React.Component {
   getValuesFromNuuka = () => {
     console.log('accessing nuuka api');
     this.loading();
-    axios.get(nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + startTimeStatic + this.state.dateStart + endTimeStatic + this.state.dateEnd + timeStampZone + apitoken)
+    axios.get(nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS
+      + this.state.datapoint1 + this.state.datapoint2 + this.state.datapoint3
+      + startTimeStatic + this.state.dateStart + endTimeStatic + this.state.dateEnd
+      + timeStampZone + apitoken)
       .then(datapoints => {
         datapoints.data.forEach(function (point) {
           datapointerinos.push(pointObj = {
@@ -218,115 +217,115 @@ export default class GenGraphScreen extends React.Component {
           }}
         />
         {this.state.showloading &&
-          <View> 
+          <View>
             <ActivityIndicator />
           </View>}
 
-          <DatePicker
-            style={{ width: 150 }}
-            date={this.state.dateEnd}
-            mode="date"
-            placeholder={this.state.dateEnd}
-            format="YYYY-MM-DD"
-            minDate={this.state.dateStart}
-            maxDate="2025-06-01"
-            confirmBtnText="Confirm"
-            cancelBtnText="Cancel"
-            customStyles={{
-              dateIcon: {
-                position: 'absolute',
-                left: 0,
-                top: 4,
-                marginLeft: 0
-              },
-              dateInput: {
-                marginLeft: 36
-              }
-            }}
-            onDateChange={(endTime) => {
-              this.setState({ dateEnd: endTime })
-              console.log('date changed ' + endTime);
-              this.loading();
-              this.getValuesFromNuuka();
-            }}
-          />
-          <ScrollView style={styles.child}>
+        <DatePicker
+          style={{ width: 150 }}
+          date={this.state.dateEnd}
+          mode="date"
+          placeholder={this.state.dateEnd}
+          format="YYYY-MM-DD"
+          minDate={this.state.dateStart}
+          maxDate="2025-06-01"
+          confirmBtnText="Confirm"
+          cancelBtnText="Cancel"
+          customStyles={{
+            dateIcon: {
+              position: 'absolute',
+              left: 0,
+              top: 4,
+              marginLeft: 0
+            },
+            dateInput: {
+              marginLeft: 36
+            }
+          }}
+          onDateChange={(endTime) => {
+            this.setState({ dateEnd: endTime })
+            console.log('date changed ' + endTime);
+            this.loading();
+            this.getValuesFromNuuka();
+          }}
+        />
+        <ScrollView style={styles.child}>
 
-            <TouchableOpacity onPress={() => {
-              this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[0].energy);
-            }} >
-              <View style={[styles.circle, this.state.energycolor]}>
-                <Text style={styles.value}> {this.state.energystate}</Text>
-              </View>
-            </TouchableOpacity>
-            <View>
-              <Text style={styles.title}>{titles.titles[0].energy}</Text>
+          <TouchableOpacity onPress={() => {
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[0].energy);
+          }} >
+            <View style={[styles.circle, this.state.energycolor]}>
+              <Text style={styles.value}> {this.state.energystate}</Text>
             </View>
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>{titles.titles[0].energy}</Text>
+          </View>
 
 
-            <TouchableOpacity onPress={() => {
-              this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[1].temperature);
-            }} >
-              <View style={[styles.circle, this.state.temperaturecolor]}>
-                <Text style={styles.value}>{this.state.temperaturestate}</Text>
-              </View>
-            </TouchableOpacity>
-            <View>
-              <Text style={styles.title}>{titles.titles[1].temperature}</Text>
+          <TouchableOpacity onPress={() => {
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[1].temperature);
+          }} >
+            <View style={[styles.circle, this.state.temperaturecolor]}>
+              <Text style={styles.value}>{this.state.temperaturestate}</Text>
             </View>
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>{titles.titles[1].temperature}</Text>
+          </View>
 
-            <TouchableOpacity onPress={() => {
-              this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[2].type);
-            }} >
-              <View style={[styles.circle, this.state.typecolor]}>
-                <Text style={styles.value}>{this.state.typestate}</Text>
-              </View>
-            </TouchableOpacity>
-            <View>
-              <Text style={styles.title}>{titles.titles[2].type}</Text>
+          <TouchableOpacity onPress={() => {
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[2].type);
+          }} >
+            <View style={[styles.circle, this.state.typecolor]}>
+              <Text style={styles.value}>{this.state.typestate}</Text>
             </View>
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>{titles.titles[2].type}</Text>
+          </View>
 
-          </ScrollView>
+        </ScrollView>
 
 
-          <ScrollView style={styles.childright}>
+        <ScrollView style={styles.childright}>
 
-            <TouchableOpacity onPress={() => {
-              this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[3].co2);
-            }} >
-              <View style={[styles.circle, this.state.co2color]}>
-                <Text style={styles.value}>{this.state.co2state}</Text>
-              </View>
-            </TouchableOpacity>
-            <View>
-              <Text style={styles.title}>{titles.titles[3].co2}</Text>
+          <TouchableOpacity onPress={() => {
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[3].co2);
+          }} >
+            <View style={[styles.circle, this.state.co2color]}>
+              <Text style={styles.value}>{this.state.co2state}</Text>
             </View>
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>{titles.titles[3].co2}</Text>
+          </View>
 
 
-            <TouchableOpacity onPress={() => {
-              this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[4].pm10);
-            }} >
-              <View style={[styles.circle, this.state.pm10color]}>
-                <Text style={styles.value}>{this.state.pm10state}</Text>
-              </View>
-            </TouchableOpacity>
-            <View>
-              <Text style={styles.title}>{titles.titles[4].pm10}</Text>
+          <TouchableOpacity onPress={() => {
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[4].pm10);
+          }} >
+            <View style={[styles.circle, this.state.pm10color]}>
+              <Text style={styles.value}>{this.state.pm10state}</Text>
             </View>
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>{titles.titles[4].pm10}</Text>
+          </View>
 
 
-            <TouchableOpacity onPress={() => {
-              this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[5].voc);
-            }} >
-              <View style={[styles.circle, this.state.voccolor]}>
-                <Text style={styles.value}>{this.state.vocstate} </Text>
-              </View>
-            </TouchableOpacity>
-            <View>
-              <Text style={styles.title}>{titles.titles[5].voc}</Text>
+          <TouchableOpacity onPress={() => {
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[5].voc);
+          }} >
+            <View style={[styles.circle, this.state.voccolor]}>
+              <Text style={styles.value}>{this.state.vocstate} </Text>
             </View>
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>{titles.titles[5].voc}</Text>
+          </View>
 
-          </ScrollView>
+        </ScrollView>
       </View>
     );
   }
