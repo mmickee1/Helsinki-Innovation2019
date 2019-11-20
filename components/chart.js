@@ -161,7 +161,7 @@ export class Chart extends React.Component {
                 textAnchor="end"
                 fill={color}
               >
-                {parseInt(Math.round(item.l))}
+                {this.formatDecimals(item.l)}
               </SVGText>
               <SVGText
                 x={chartArea.width+20}
@@ -171,7 +171,7 @@ export class Chart extends React.Component {
                 textAnchor="start"
                 fill={color}
               >
-                {parseInt(Math.round(item.r))}
+                {this.formatDecimals(item.r)}
               </SVGText>
             </G>  
           );
@@ -290,6 +290,14 @@ export class Chart extends React.Component {
     );
   }
 
+  formatDecimals = (value) => {
+    if (value >= 100) {
+      return parseInt(value);
+    } else {
+      return value.toFixed(1);
+    }
+  }
+
   
 
   render() {
@@ -326,8 +334,10 @@ export class Chart extends React.Component {
 
 
     const chartArea = {x: 0, y: 0, width: chartWidth, height: chartHeight};
-    const chartValueScaleLeft = {min: 20, max: 25};
-    const chartValueScaleRight = {min: 400, max: 500};
+    //const chartValueScaleLeft = {min: 20, max: 25};
+    //const chartValueScaleRight = {min: 400, max: 500};
+
+    let chartScale = this.props.scale;
 
     const leftReferenceValue = 22;
     const rightReferenceValue = 400;
@@ -343,10 +353,8 @@ export class Chart extends React.Component {
     ];
     */
 
-    const numXLabels = 4;
-    const xLabels = this.generateXLabels(chartValueScaleLeft, chartValueScaleRight, numXLabels);
-
-    console.log(xLabels);
+    const numXLabels = 5;
+    const xLabels = this.generateXLabels(chartScale[0], chartScale[1], numXLabels);
 
     const bottomArea = {
       x: labelsWidthLeft,
@@ -382,23 +390,23 @@ export class Chart extends React.Component {
             {/* Draw labels in Y-direction */}
             <G x={marginLeft} y={marginTop}>
               
-              {this.drawYLabels(chartArea, chartValueScaleLeft, chartValueScaleRight, xLabels, "black")}
+              {this.drawYLabels(chartArea, chartScale[0], chartScale[1], xLabels, "black")}
             </G>
 
             {/* Draw the main chart */}
             <G x={marginLeft+labelsWidthLeft} y={marginTop} width={chartWidth} height={chartHeight}>
-              {this.drawXAxis(chartArea, chartValueScaleLeft, xLabels)}
+              {this.drawXAxis(chartArea, chartScale[0], xLabels)}
               {this.drawYAxes(chartArea, data)}
               {this.drawHighlights(chartArea, data.length, highlights)}
               
               <G clipPath="url(#chartClip)">
-                {this.drawAreaChart(chartArea, chartValueScaleRight, data, 1, rightChartColor)}
+                {this.drawAreaChart(chartArea, chartScale[1], data, 1, rightChartColor)}
                 {/*this.drawBarChart(chartArea, chartValueScaleRight, data, 1, rightChartColor)*/}
-                {this.drawLineChart(chartArea, chartValueScaleLeft, data, 0, leftChartColor)}
+                {this.drawLineChart(chartArea, chartScale[0], data, 0, leftChartColor)}
+              
+                {this.drawReferenceLine(chartArea, chartScale[1], rightReferenceValue, rightRefColor, "right")}
+                {this.drawReferenceLine(chartArea, chartScale[0], leftReferenceValue, leftRefColor, "left")}
               </G>
-
-              {this.drawReferenceLine(chartArea, chartValueScaleRight, rightReferenceValue, rightRefColor, "right")}
-              {this.drawReferenceLine(chartArea, chartValueScaleLeft, leftReferenceValue, leftRefColor, "left")}
             </G>
 
             {/* Draw labels in X-direction */}

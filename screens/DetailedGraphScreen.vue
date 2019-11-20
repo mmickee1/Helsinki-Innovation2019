@@ -4,7 +4,7 @@
     <touchable-opacity :on-press="showDatePicker">
       <view class="date-select">
         <text class="date-select-text">
-          {{`${currentDate.getDate()}.${currentDate.getMonth()+1}.${currentDate.getFullYear()}`}}
+          {{makeTitleDate(currentDate)}}
         </text>
       </view>
     </touchable-opacity>
@@ -12,11 +12,12 @@
     <view class="chart-container">
       <chart
         :data="chartData"
+        :scale="chartScale"
         :config="chartConfig"
       />
     </view>
 
-    <date-time-picker
+    <date-picker
       :date="currentDate"
       :is-visible="datePickerVisible"
       :on-confirm="onDateSelectConfirm"
@@ -30,12 +31,13 @@
 
 <script>
 import {Chart} from '../components/chart.js';
-import DateTimePicker from 'react-native-modal-datetime-picker';
+import DatePicker from 'react-native-modal-datetime-picker';
 import {LoaderModal} from '../components/loadermodal.js';
 export default {
   data: function() {
     return {
       chartData: [],
+      chartScale: [{min: 20, max: 25}, {min: 400, max: 500}],
       chartConfig: {
         leftDataColor: "orange",
         rightDataColor: "magenta",
@@ -53,49 +55,11 @@ export default {
       chartLoading: false,
     }
   },
+
   async mounted() {
-    /*
-    const buildingInfo = await this.getBuildingInfo(4285);
-    console.log(buildingInfo);
-
-
-
-    let startDate = "2019-06-02";
-    let endDate = "2019-06-03";
-
-    this.currentDate = new Date(startDate);
-    this.buildingAddress = buildingInfo.name;
-
-
-
-    const baseUrl = "https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetMeasurementInfo/";
-    const miResponse = await fetch(`${baseUrl}?$token=${this.apiToken}&BuildingID=${buildingInfo.buildingID}`);
-    const measureInfo = await miResponse.json();
-
-    const tempDatapoints = this.findDatapointsByType(measureInfo, "indoor conditions: temperature");
-    //console.log(tempDatapoints);
-    const co2Datapoints = this.findDatapointsByType(measureInfo, "indoor conditions: co2");
-    //console.log(co2Datapoints);
-
-    const tempInfo = await this.getBuildingMeasurements(buildingInfo.buildingID, "83556", startDate, endDate);
-    const co2Info = await this.getBuildingMeasurements(buildingInfo.buildingID, "83551", startDate, endDate);
-
-    console.log(tempInfo.length);
-    //console.log(tempInfo);
-
-
-    const hourlyTemp = this.makeHourlyData(tempInfo);
-    const hourlyCO2 = this.makeHourlyData(co2Info);
-
-    const chartData = [];
-    for (let hour=0; hour < 24; hour++) {
-      chartData.push({label: hourlyTemp[hour].time, point: [hourlyTemp[hour].value, hourlyCO2[hour].value]});
-    }
-
-    this.chartData = chartData;
-    */
     this.updateChart(this.currentDate);
   },
+  
   methods: {
     formatNumber(number) {
       return (number < 10 ? '0' : '') + number;
@@ -140,9 +104,19 @@ export default {
         chartData.push({label: hourlyTemp[hour].time, point: [hourlyTemp[hour].value, hourlyCO2[hour].value]});
       }
 
-      console.log(chartData);
+      const tempScale = this.findMinMax(hourlyTemp);
+      const co2Scale = this.findMinMax(hourlyCO2);
+      console.log(tempScale);
+
+      const chartScale = [
+        {min: tempScale.min - ((tempScale.max-tempScale.min) * 0.2), max: tempScale.max + ((tempScale.max-tempScale.min) * 0.2)},
+        {min: co2Scale.min - ((co2Scale.max-co2Scale.min) * 0.2), max: co2Scale.max + ((co2Scale.max-co2Scale.min) * 0.2)}
+      ];
+
+      //console.log(chartData);
 
       this.chartData = chartData;
+      this.chartScale = chartScale;
     },
 
     findDatapointsByType(data, type) {
@@ -155,6 +129,7 @@ export default {
       }
       return datapoints;
     },
+
     getBuildingMeasurements(buildingID, datapoints, startTime, endTime) {
       return new Promise(async (resolve, reject) => {
         try {
@@ -169,6 +144,7 @@ export default {
         }
       });
     },
+
     makeHourlyData(rawData) {
       const indexedData = [];
 
@@ -204,6 +180,7 @@ export default {
       }
       return hourlyData;
     },
+
     getBuildingInfo(site) {
       return new Promise(async (resolve, reject) => {
         try {
@@ -235,25 +212,45 @@ export default {
       console.log(date);
 
       if (date.toDateString() != this.currentDate.toDateString()) {
-        this.currentDate = date;
-        
         this.chartLoading = true;
-        await this.updateChart(this.currentDate);
+        await this.updateChart(date);
         this.chartLoading = false;
+        this.currentDate = date;
       }
       
       this.datePickerVisible = false;
     },
+
     onDateSelectCancel() {
       this.datePickerVisible = false;
     },
+
     showDatePicker() {
       this.datePickerVisible = true;
     },
+
+    findMinMax(data) {
+      let min = data[0].value;
+      let max = min;
+      data.forEach((item) => {
+        if (item.value < min) {
+          min = item.value;
+        }
+        if (item.value > max) {
+          max = item.value;
+        }
+      });
+      return {min: min, max: max};
+    },
+
+    makeTitleDate(date) {
+      const days = ['Sunnuntai', 'Maanantai', 'Tiistai', 'Keskiviikko', 'Torstai', 'Perjantai', 'Lauantai'];
+      return `${days[date.getDay()]} ${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()}`;
+    }
   },
   components: {
     Chart,
-    DateTimePicker,
+    DatePicker,
     LoaderModal,
   }
 };
