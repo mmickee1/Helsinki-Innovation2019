@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import {
+  ActivityIndicator,
   StyleSheet,
   Text,
   View,
@@ -8,7 +9,9 @@ import {
   ScrollView,
 } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import DatePicker from 'react-native-datepicker'
 import axios from 'axios';
+import { getTimeFieldValues } from 'uuid-js';
 
 
 const titles = {
@@ -34,9 +37,17 @@ const titles = {
 // Make a request for a user with a given ID
 const apitoken = 'L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU='
 const nuukaApi = 'https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/'
-const getMeasurementDataByIDs = 'GetMeasurementDataByIDs/?&Building=2410&DataPointIDs=83511;83519;83527&StartTime=2019-08-01&EndTime=2019-08-30&TimestampTimeZone=UTCOffset&MeasurementSystem=SI&$format=json&$token='
+const getMeasurementDataByID = 'GetMeasurementDataByIDs/?&Building='
+const dataPointIDS = '&DataPointIDs=83511;83519;83527'
+const startTimeStatic = '&StartTime='
+const endTimeStatic = '&EndTime='
+const timeStampZone = '&TimestampTimeZone=UTCOffset&MeasurementSystem=SI&$format=json&$token='
 const datapointerinos = [];
 let datapointerinosvalues = 0;
+
+
+//<ActivityIndicator size="large" color="#0000ff" animating={this.state.loadingState} style={styles.loaderstyle} />
+//ei toiminu viel piilottamine jostain syystä..
 
 /*
 //Performing multiple concurrent requests
@@ -55,6 +66,7 @@ axios.all([getUserAccount(), getUserPermissions()])
 //esimerkki co2 arvojen saamisesta
 //https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetMeasurementDataByIDs/?&Building=2410&DataPointIDs=83511;83519;83527&StartTime=2019-08-01&EndTime=2019-08-30&TimestampTimeZone=UTCOffset&MeasurementSystem=SI&$format=json&$token=L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU=
 
+//working startTime: 2019 elokuu. eli 2019-08-1   ja 2019-08-1
 
 /*
 CO2 levels from https://www.kane.co.uk/knowledge-centre/what-are-safe-levels-of-co-and-co2-in-rooms
@@ -72,6 +84,7 @@ export default class GenGraphScreen extends React.Component {
 
   constructor(props) {
     super(props);
+    console.log(props);
     this.state = {
       mystate: 'test',
       co2state: 0,
@@ -86,15 +99,71 @@ export default class GenGraphScreen extends React.Component {
       co2color: styles.greencircle,
       pm10color: styles.greencircle,
       voccolor: styles.greencircle,
-      typecolor: styles.greencircle
+      typecolor: styles.greencircle,
+
+      buildingID: 2410,
+      datapoint1: 1,
+      datapoint2: 2,
+      datapoint3: 3,
+      dateStart: '',  //has to be year-month-date
+      dateEnd: '',
+
+      loadingState: false,
     }
   }
 
   componentDidMount() {
     console.log('component did mount');
-    axios.get(nuukaApi + getMeasurementDataByIDs + apitoken)
+    let that = this;
+    var date = new Date().getDate(); //Current Date
+    var month = new Date().getMonth() + 1; //Current Month
+    var year = new Date().getFullYear(); //Current Year
+    that.setState({
+      dateStart:
+        year + '-' + month + '-' + date,
+    });
+    that.setState({
+      dateEnd:
+        year + '-' + month + '-' + date,
+    });
+    //getValuesFromNuuka();
+  }
+
+  testState = () => {
+    this.setState({ mystate: 'updated' })
+  }
+  changeCO2State = (data) => {
+    if (data > 0 && data < 1000) {
+      this.setState({ co2color: styles.yellowcircle })
+    } else if (data > 1000 && data < 2000) {
+      this.setState({ co2color: styles.redcircle })
+    } else {
+      this.setState({ co2color: styles.greencircle })
+    }
+    this.setState({ co2state: data + ' ppm' })
+  }
+
+  goToNextScreen = (buildingID, timeStart, timeStop, datapointArray, graphType) => {
+    console.log(buildingID, timeStart, timeStop, datapointArray, graphType);
+    this.props.navigation.navigate('DetailedGraph', {
+      buildingID: buildingID,
+      timeStart: timeStart,
+      timeStop: timeStop,
+      datapointArray: datapointArray,
+      graphType: graphType
+    })
+  }
+
+  loading = (bool) => {
+    console.log(bool);
+    this.setState({ loadingState: bool })
+  }
+
+  getValuesFromNuuka = () => {
+    console.log('accessing nuuka api');
+    this.loading(true);
+    axios.get(nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + startTimeStatic + this.state.dateStart + endTimeStatic + this.state.dateEnd + timeStampZone + apitoken)
       .then(datapoints => {
-        // let self = this;
         datapoints.data.forEach(function (point) {
           datapointerinos.push(pointObj = {
             cotwovaluerino: point.Value
@@ -105,32 +174,13 @@ export default class GenGraphScreen extends React.Component {
         co2value = co2value.toFixed(0);
         this.changeCO2State(co2value);
         console.log('changed state');
+        console.log('loading finished');
+        this.loading(false);
       })
       .catch(function (error) {
         console.log(error);
-      })/*
-    .finally(function () {
-      //console.log(datapointerinos); //WORKS. Object {"cotwovalue": 485.489,} , ... 
-      //console.log(datapointerinosvalues / datapointerinos.length); // length ~64000
-      this.state.cotwovaluerino = datapointerinosvalues / datapointerinos.length; //value is around ~534 ppm
-      console.log('changing state');
-      this.changeCO2State();
-      console.log('changed state');
-    });*/
-  }
-
-  testState = () => {
-    this.setState({ mystate: 'updated' })
-  }
-  changeCO2State = (data) => {
-    if (data > 0  && data < 1000) {
-      this.setState({ co2color: styles.yellowcircle })
-    } else if (data > 1000 && data < 2000) {
-      this.setState({ co2color: styles.redcircle })
-    } else {
-      this.setState({ co2color: styles.greencircle })
-    }
-    this.setState({ co2state: data + ' ppm' })
+        this.loading(false);
+      })
   }
 
 
@@ -138,11 +188,72 @@ export default class GenGraphScreen extends React.Component {
     var x = 0; //näin voi tehdä... laita tähä vaa lisää juttui mitä tarvii
     return (
       <View style={styles.container}>
+
+        <DatePicker
+          style={{ width: 150 }}
+          date={this.state.dateStart}
+          mode="date"
+          placeholder={this.state.dateStart}
+          format="YYYY-MM-DD"
+          minDate="2015-05-01"
+          maxDate="2025-06-01"
+          confirmBtnText="Confirm"
+          cancelBtnText="Cancel"
+          customStyles={{
+            dateIcon: {
+              position: 'absolute',
+              left: 0,
+              top: 4,
+              marginLeft: 0
+            },
+            dateInput: {
+              marginLeft: 36
+            }
+            //You can check the source to find the other keys.
+          }}
+          onDateChange={(startTime) => {
+            this.setState({ dateStart: startTime })
+            console.log('date changed ' + startTime);
+            this.getValuesFromNuuka();
+          }}
+        />
+
+
+        <DatePicker
+          style={{ width: 150 }}
+          date={this.state.dateEnd}
+          mode="date"
+          placeholder={this.state.dateEnd}
+          format="YYYY-MM-DD"
+          minDate={this.state.dateStart}
+          maxDate="2025-06-01"
+          confirmBtnText="Confirm"
+          cancelBtnText="Cancel"
+          customStyles={{
+            dateIcon: {
+              position: 'absolute',
+              left: 0,
+              top: 4,
+              marginLeft: 0
+            },
+            dateInput: {
+              marginLeft: 36
+            }
+          }}
+          onDateChange={(endTime) => {
+            this.setState({ dateEnd: endTime })
+            console.log('date changed ' + endTime);
+            this.getValuesFromNuuka();
+          }
+          }
+        />
         <ScrollView style={styles.child}>
 
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => {
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[0].energy);
+          }} >
             <View style={[styles.circle, this.state.energycolor]}>
-              <Text style={styles.value}>{this.state.energystate}</Text>
+              <Text style={styles.value}> {this.state.energystate}</Text>
             </View>
           </TouchableOpacity>
           <View>
@@ -150,7 +261,9 @@ export default class GenGraphScreen extends React.Component {
           </View>
 
 
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => {
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[1].temperature);
+          }} >
             <View style={[styles.circle, this.state.temperaturecolor]}>
               <Text style={styles.value}>{this.state.temperaturestate}</Text>
             </View>
@@ -159,8 +272,10 @@ export default class GenGraphScreen extends React.Component {
             <Text style={styles.title}>{titles.titles[1].temperature}</Text>
           </View>
 
-
-          <TouchableOpacity>
+         
+          <TouchableOpacity onPress={() => {
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[2].type);
+          }} >
             <View style={[styles.circle, this.state.typecolor]}>
               <Text style={styles.value}>{this.state.typestate}</Text>
             </View>
@@ -174,7 +289,9 @@ export default class GenGraphScreen extends React.Component {
 
         <ScrollView style={styles.childright}>
 
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => {
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[3].co2);
+          }} >
             <View style={[styles.circle, this.state.co2color]}>
               <Text style={styles.value}>{this.state.co2state}</Text>
             </View>
@@ -184,7 +301,9 @@ export default class GenGraphScreen extends React.Component {
           </View>
 
 
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => {
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[4].pm10);
+          }} >
             <View style={[styles.circle, this.state.pm10color]}>
               <Text style={styles.value}>{this.state.pm10state}</Text>
             </View>
@@ -194,7 +313,9 @@ export default class GenGraphScreen extends React.Component {
           </View>
 
 
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => {
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[5].voc);
+          }} >
             <View style={[styles.circle, this.state.voccolor]}>
               <Text style={styles.value}>{this.state.vocstate} </Text>
             </View>
@@ -214,11 +335,12 @@ const styles = StyleSheet.create({
     flex: 1,
     flexWrap: 'wrap',
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
-    marginHorizontal: 16,
+    justifyContent: 'space-evenly',
+    marginTop: 8,
+    marginHorizontal: 8,
   },
   child: {
+    paddingTop: 10,
     flexBasis: '50%',
     width: '50%',
     justifyContent: 'center',
@@ -226,6 +348,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   childright: {
+    paddingTop: 10,
     flexBasis: '50%',
     width: '50%',
     justifyContent: 'center',
@@ -269,5 +392,12 @@ const styles = StyleSheet.create({
     marginTop: 15,
     fontWeight: 'bold',
     fontSize: 24
+  },
+  loaderstyle: {
+    flex: 1,
+    justifyContent: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 10
   }
 });
