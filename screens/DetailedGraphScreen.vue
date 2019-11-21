@@ -9,6 +9,15 @@
       </view>
     </touchable-opacity>
 
+
+    <view class="chart-type-title">
+      <view class="chart-type-text">
+        <text>Lämpötila</text>
+      </view>
+      <view class="chart-type-text"> 
+        <text class="chart-type-text-right">CO2</text>
+      </view>
+    </view>
     <view class="chart-container">
       <chart
         :data="chartData"
@@ -296,4 +305,18 @@ export default {
   align-content: center;
   justify-content: center;
 }
+.chart-type-title {
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.chart-type-text {
+  width: 100px;
+  background-color: blueviolet;
+  padding: 5;
+}
+.chart-type-text-right {
+  text-align: right;
+}
+
 </style>

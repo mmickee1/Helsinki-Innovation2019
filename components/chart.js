@@ -306,7 +306,7 @@ export class Chart extends React.Component {
 
     let marginLeft = 5;
     let marginRight = 5;
-    let marginTop = 50;
+    let marginTop = 25;
     let marginBottom = 50;
 
     let labelsWidthLeft = 20;
@@ -375,12 +375,9 @@ export class Chart extends React.Component {
             </ClipPath>
           </Defs>
           <G>
-            {/* Draw chart title and units in left and right */}
-            <SVGText x={4} y={12} fontSize="10" textAnchor="start">{leftTitle}</SVGText>
-            <SVGText x={4} y={12+14} fontSize="14" textAnchor="start">{leftUnit}</SVGText>
-
-            <SVGText x={width-4} y={12} fontSize="10" textAnchor="end">{rightTitle}</SVGText>
-            <SVGText x={width-4} y={12+14} fontSize="14" textAnchor="end">{rightUnit}</SVGText>
+            {/* Draw chart units in left and right */}
+            <SVGText x={4} y={16} fontSize="14" textAnchor="start">{leftUnit}</SVGText>
+            <SVGText x={width-4} y={16} fontSize="14" textAnchor="end">{rightUnit}</SVGText>
 
             {/*
             <Rect x={0} y={marginTop} rx="0" ry="0" width={labelsWidthLeft+marginLeft} height={chartArea.height+2} fill={leftChartColor}/>
