@@ -13,6 +13,7 @@ import {
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import DatePicker from 'react-native-datepicker'
 import axios from 'axios';
+import MultiSlider from '@ptomasroos/react-native-multi-slider';
 
 
 const titles = {
@@ -120,7 +121,9 @@ export default class GenGraphScreen extends React.Component {
 
       showloading: false,
 
-      pickerValue: ''
+      pickerValue: '',
+
+      hourslider: [8, 16],
     }
   }
 
@@ -191,6 +194,10 @@ export default class GenGraphScreen extends React.Component {
     this.setState({ pickerValue: room })
   }
 
+  multiSliderValuesChange = (hours) => {
+    console.log('data changed: ' + hours);
+    this.setState({ hourslider: hours })
+  }
 
   getValuesFromNuuka = () => {
     console.log('accessing nuuka api');
@@ -307,6 +314,16 @@ export default class GenGraphScreen extends React.Component {
               <Picker.Item label={"Room 7"} value={"room7"} />
               <Picker.Item label={"Room 8"} value={"room8"} />
             </Picker>
+
+            <MultiSlider
+              values={[this.state.hourslider[0], this.state.hourslider[1]]}
+              sliderLength={144}
+              onValuesChange={this.multiSliderValuesChange}
+              min={0}
+              max={24}
+              step={1}
+            />
+            <Text style={styles.titlee}>Kellonaika:   {this.state.hourslider[0]}  -  {this.state.hourslider[1]}</Text>
           </View>
 
           <TouchableOpacity onPress={() => {
@@ -389,20 +406,23 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
   child: {
-    paddingTop: 10,
     flexBasis: '50%',
     width: '50%',
     justifyContent: 'center',
     alignSelf: 'center',
     alignItems: 'center',
+    paddingTop: 100,
+    paddingBottom: 100,
+
   },
   childright: {
-    paddingTop: 10,
     flexBasis: '50%',
     width: '50%',
     justifyContent: 'center',
     alignSelf: 'center',
     alignItems: 'center',
+    paddingTop: 100,
+    paddingBottom: 100,
   },
   header: {
     fontSize: 32,
@@ -437,7 +457,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff000',
   },
   value: {
-    marginBottom: 15,
     fontWeight: 'bold',
     fontSize: 24
   },
@@ -453,6 +472,6 @@ const styles = StyleSheet.create({
   picker: {
     width: 150,
     marginTop: 30,
-    marginBottom: 100
+    marginBottom: 30,
   }
 });
