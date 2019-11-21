@@ -11,14 +11,14 @@
               <text class="transparent">Value</text>
             </view>
           </TouchableOpacity>
-          <text>Type</text>
+          <text class="circletypetext">Energian kulutus</text>
 
           <TouchableOpacity :on-press="onPressButton">
             <view class="circlered" style>
               <text class="transparent">Value</text>
             </view>
           </TouchableOpacity>
-          <text>Type</text>
+          <text class="circletypetext">Lämpötila</text>
          <!-- <Text style="{styles.bigBlue}">just bigBlue</Text>-->
 
           <TouchableOpacity :on-press="onPressButton">
@@ -26,7 +26,7 @@
               <text class="transparent">Value</text>
             </view>
           </TouchableOpacity>
-          <text>Type</text>
+          <text class="circletypetext">Type</text>
 
           <!--  <touchable-opacity :on-press="onPressButton">
             <image :style="{width: width, height: height}" :source="{uri: imagecircle}" />
@@ -39,21 +39,21 @@
               <text class="transparent">Value</text>
             </view>
           </TouchableOpacity>
-          <text>Type</text>
+          <text class="circletypetext">CO2-Hiukkaset</text>
 
           <TouchableOpacity :on-press="onPressButton">
             <view class="circleyellow" style>
               <text class="transparent">Value</text>
             </view>
           </TouchableOpacity>
-          <text>Type</text>
+          <text class="circletypetext">PM10-Hiukkaset</text>
 
           <TouchableOpacity :on-press="onPressButton">
             <view class="circlegreen" style>
               <text class="transparent">Value</text>
             </view>
           </TouchableOpacity>
-          <text>Type</text>
+          <text class="circletypetext">VOC-Hiukkaset</text>
         </view>
       </view>
     </scroll-view>
@@ -168,5 +168,11 @@ scroll-view {
 }
 .transparent {
   background-color: inherit;
+  font-weight: bold;
+}
+.circletypetext {
+  margin-bottom: 15px;
+  margin-top: 15px;
+  font-weight: bold;
 }
 </style>
