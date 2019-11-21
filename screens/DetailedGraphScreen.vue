@@ -59,7 +59,7 @@ export default {
   async mounted() {
     this.updateChart(this.currentDate);
   },
-  
+
   methods: {
     formatNumber(number) {
       return (number < 10 ? '0' : '') + number;
@@ -86,34 +86,37 @@ export default {
       const measureInfo = await miResponse.json();
 
       const tempDatapoints = this.findDatapointsByType(measureInfo, "indoor conditions: temperature");
-      //console.log(tempDatapoints);
       const co2Datapoints = this.findDatapointsByType(measureInfo, "indoor conditions: co2");
-      //console.log(co2Datapoints);
 
-      const tempInfo = await this.getBuildingMeasurements(buildingInfo.buildingID, "83556", startDate, endDate);
-      const co2Info = await this.getBuildingMeasurements(buildingInfo.buildingID, "83551", startDate, endDate);
+      const measureTasks = [
+        this.getBuildingMeasurements(buildingInfo.buildingID, "83556", startDate, endDate),
+        this.getBuildingMeasurements(buildingInfo.buildingID, "83551", startDate, endDate),
+      ];
 
-      //console.log(tempInfo.length);
-      //console.log(tempInfo);
+      // fetch all measurements in parallel
+      const measurements = await Promise.all(measureTasks);
 
+      const tempInfo = measurements[0];
+      const co2Info = measurements[1];
+
+      // make hourly data from Nuuka raw data
       const hourlyTemp = this.makeHourlyData(tempInfo);
       const hourlyCO2 = this.makeHourlyData(co2Info);
 
+      // format data to be shown in the chart
       const chartData = [];
       for (let hour=0; hour < 24; hour++) {
         chartData.push({label: hourlyTemp[hour].time, point: [hourlyTemp[hour].value, hourlyCO2[hour].value]});
       }
 
+      // calculate chart value scale based on data
       const tempScale = this.findMinMax(hourlyTemp);
       const co2Scale = this.findMinMax(hourlyCO2);
-      console.log(tempScale);
-
+  
       const chartScale = [
         {min: tempScale.min - ((tempScale.max-tempScale.min) * 0.2), max: tempScale.max + ((tempScale.max-tempScale.min) * 0.2)},
         {min: co2Scale.min - ((co2Scale.max-co2Scale.min) * 0.2), max: co2Scale.max + ((co2Scale.max-co2Scale.min) * 0.2)}
       ];
-
-      //console.log(chartData);
 
       this.chartData = chartData;
       this.chartScale = chartScale;
@@ -171,6 +174,7 @@ export default {
           }
         }
 
+        // calculate average based on number of valid entries (this way missing data doesn't affect average)
         let average = 0;
         if (dataCount > 0) {
           average = sum / dataCount;
