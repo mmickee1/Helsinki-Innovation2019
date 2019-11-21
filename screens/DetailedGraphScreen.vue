@@ -11,12 +11,16 @@
 
 
     <view class="chart-type-title">
-      <view class="chart-type-text">
-        <text>Lämpötila</text>
-      </view>
-      <view class="chart-type-text"> 
-        <text class="chart-type-text-right">CO2</text>
-      </view>
+      <touchable-opacity :on-press="showLeftChartSelector">
+        <view class="chart-type-text">
+          <text class="chart-type-text-left">{{chartConfig.leftDataTitle}}</text>
+        </view>
+      </touchable-opacity>
+      <touchable-opacity :on-press="showRightChartSelector">
+        <view class="chart-type-text"> 
+          <text class="chart-type-text-right">{{chartConfig.rightDataTitle}}</text>
+        </view>
+      </touchable-opacity>
     </view>
     <view class="chart-container">
       <chart
@@ -35,6 +39,18 @@
     />
 
     <loader-modal :loading="chartLoading"/>
+    <chart-selector-modal
+      :selected="leftChartSelected"
+      :visible="leftChartModalOpen"
+      :onClose="onLeftChartTypeModalClose"
+      :onSelect="onLeftChartTypeSelect"
+    />
+    <chart-selector-modal
+      :selected="rightChartSelected"
+      :visible="rightChartModalOpen"
+      :onClose="onRightChartTypeModalClose"
+      :onSelect="onRightChartTypeSelect"
+    />
   </view>
 </template>
 
@@ -42,9 +58,18 @@
 import {Chart} from '../components/chart.js';
 import DatePicker from 'react-native-modal-datetime-picker';
 import {LoaderModal} from '../components/loadermodal.js';
+import {ChartSelectorModal} from '../components/chartselectormodal.js';
 export default {
   data: function() {
     return {
+      chartTypes: [
+        {name: 'Lämpötila', unit: '°C', datapoint: '83556'},
+        {name: "CO2", unit: 'ppm', datapoint: '83551'},
+        {name: 'Kosteus', unit: '%', datapoint: '83552'},
+        {name: 'PM10', unit: 'μg/m3', datapoint: '83554'},
+        {name: 'VOC', unit: 'ppb', datapoint: '83557'},
+      ],
+
       chartData: [],
       chartScale: [{min: 20, max: 25}, {min: 400, max: 500}],
       chartConfig: {
@@ -62,11 +87,15 @@ export default {
       currentDate: new Date(),
       datePickerVisible: false,
       chartLoading: false,
+      leftChartModalOpen: false,
+      rightChartModalOpen: false,
+      leftChartSelected: 0,
+      rightChartSelected: 1,
     }
   },
 
   async mounted() {
-    this.updateChart(this.currentDate);
+    this.updateChart(this.currentDate, this.leftChartSelected, this.rightChartSelected);
   },
 
   methods: {
@@ -97,9 +126,12 @@ export default {
       const tempDatapoints = this.findDatapointsByType(measureInfo, "indoor conditions: temperature");
       const co2Datapoints = this.findDatapointsByType(measureInfo, "indoor conditions: co2");
 
+      let leftDatapoint = this.chartTypes[this.leftChartSelected].datapoint;
+      let rightDatapoint = this.chartTypes[this.rightChartSelected].datapoint;
+
       const measureTasks = [
-        this.getBuildingMeasurements(buildingInfo.buildingID, "83556", startDate, endDate),
-        this.getBuildingMeasurements(buildingInfo.buildingID, "83551", startDate, endDate),
+        this.getBuildingMeasurements(buildingInfo.buildingID, leftDatapoint, startDate, endDate),
+        this.getBuildingMeasurements(buildingInfo.buildingID, rightDatapoint, startDate, endDate),
       ];
 
       // fetch all measurements in parallel
@@ -259,12 +291,46 @@ export default {
     makeTitleDate(date) {
       const days = ['Sunnuntai', 'Maanantai', 'Tiistai', 'Keskiviikko', 'Torstai', 'Perjantai', 'Lauantai'];
       return `${days[date.getDay()]} ${date.getDate()}.${date.getMonth()+1}.${date.getFullYear()}`;
+    },
+
+    onLeftChartTypeModalClose() {
+      this.leftChartModalOpen = false;
+    },
+    onRightChartTypeModalClose() {
+      this.rightChartModalOpen = false;
+    },
+
+    showLeftChartSelector() {
+      this.leftChartModalOpen = true;
+    },
+    showRightChartSelector() {
+      this.rightChartModalOpen = true;
+    },
+
+    async onLeftChartTypeSelect(type) {
+      this.leftChartSelected = type;
+      this.chartConfig.leftDataTitle = this.chartTypes[type].name;
+      this.chartConfig.leftDataUnit = this.chartTypes[type].unit;
+
+      this.chartLoading = true;
+      await this.updateChart(this.currentDate);
+      this.chartLoading = false;
+    },
+    async onRightChartTypeSelect(type) {
+      this.rightChartSelected = type;
+      this.chartConfig.rightDataTitle = this.chartTypes[type].name;
+      this.chartConfig.rightDataUnit = this.chartTypes[type].unit;
+
+      this.chartLoading = true;
+      await this.updateChart(this.currentDate);
+      this.chartLoading = false;
     }
   },
   components: {
     Chart,
     DatePicker,
     LoaderModal,
+    ChartSelectorModal,
   }
 };
 </script>
@@ -315,8 +381,13 @@ export default {
   background-color: blueviolet;
   padding: 5;
 }
+.chart-type-text-left {
+  text-align: left;
+  color: white;
+}
 .chart-type-text-right {
   text-align: right;
+  color: white;
 }
 
 </style>
