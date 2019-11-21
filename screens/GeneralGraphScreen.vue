@@ -98,7 +98,7 @@ export default {
       this.navigation.navigate("DetailedGraph");
     },
     onPressButton() {
-      this.navigation.navigate("DetailedGraph");
+      this.navigation.navigate("Graph");
     },
     onPressButtonlast() {}
   }

@@ -7,6 +7,8 @@ import {
   SafeAreaView,
   SectionList,
   ScrollView,
+  Picker,
+  Button,
 } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import DatePicker from 'react-native-datepicker'
@@ -76,17 +78,29 @@ I received 450-650 from nuuka api
 >40,000     ppm	    Exposure may lead to serious oxygen deprivation resulting in permanent brain damage, 
                     coma, even death.*/
 
-export default class GenGraphScreen extends React.Component {
+/*
+          <TouchableOpacity onPress={() => {
+this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[2].type);
+}} >
+<View style={[styles.circle, this.state.typecolor]}>
+<Text style={styles.value}>{this.state.typestate}</Text>
+</View>
+</TouchableOpacity>
+<View>
+<Text style={styles.title}>{titles.titles[2].type}</Text>
+</View>*/
 
+export default class GenGraphScreen extends React.Component {
   constructor(props) {
     super(props);
     console.log(props);
+    //receive here id set as building id
     this.state = {
       mystate: 'test',
-      co2state: 0,
-      pm10state: 0,
-      vocstate: 0,
-      energystate: 0,
+      co2state: 0, //ppm
+      pm10state: 0, //ppm
+      vocstate: 0, //ppm
+      energystate: 0, //kWh
       temperaturestate: 0,
       cotwovaluerino: 0,
       typestate: 0,
@@ -104,9 +118,26 @@ export default class GenGraphScreen extends React.Component {
       dateStart: '',  //has to be year-month-date
       dateEnd: '',
 
-      showloading: false
+      showloading: false,
+
+      pickerValue: ''
     }
   }
+
+  //something like this. not yet working..
+  /*static defaultNavigationOptions = ({ navigation }) => {
+    console.log('inside nav' + navigation)
+    return {
+      headerRight: () => (
+        <Button
+          //onPress={navigation.getParam('increaseCount')}
+          //title="+1"
+         // color={Platform.OS === 'ios' ? '#fff' : null}
+         title='hey'
+        />
+      ),
+    };
+  };*/
 
   componentDidMount() {
     console.log('component did mount');
@@ -155,6 +186,11 @@ export default class GenGraphScreen extends React.Component {
   loadingdone = () => {
     this.setState({ showloading: false })
   }
+
+  selectRoom = (room) => {
+    this.setState({ pickerValue: room })
+  }
+
 
   getValuesFromNuuka = () => {
     console.log('accessing nuuka api');
@@ -251,6 +287,28 @@ export default class GenGraphScreen extends React.Component {
         />
         <ScrollView style={styles.child}>
 
+          <View style={styles.picker}>
+            <Text>
+              <Text style={{ fontWeight: "bold" }}>Valitse huone</Text>
+            </Text>
+            <Picker
+              mode="dropdown"
+              selectedValue={(this.state && this.state.pickerValue) || ''}
+              onValueChange={(itemValue, itemIndex) => {
+                this.selectRoom(itemValue);
+              }}>
+              <Picker.Item label={""} value={""} />
+              <Picker.Item label={"Room 1"} value={"room1"} />
+              <Picker.Item label={"Room 2"} value={"room2"} />
+              <Picker.Item label={"Room 3"} value={"room3"} />
+              <Picker.Item label={"Room 4"} value={"room4"} />
+              <Picker.Item label={"Room 5"} value={"room5"} />
+              <Picker.Item label={"Room 6"} value={"room6"} />
+              <Picker.Item label={"Room 7"} value={"room7"} />
+              <Picker.Item label={"Room 8"} value={"room8"} />
+            </Picker>
+          </View>
+
           <TouchableOpacity onPress={() => {
             this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[0].energy);
           }} >
@@ -274,16 +332,6 @@ export default class GenGraphScreen extends React.Component {
             <Text style={styles.title}>{titles.titles[1].temperature}</Text>
           </View>
 
-          <TouchableOpacity onPress={() => {
-            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[2].type);
-          }} >
-            <View style={[styles.circle, this.state.typecolor]}>
-              <Text style={styles.value}>{this.state.typestate}</Text>
-            </View>
-          </TouchableOpacity>
-          <View>
-            <Text style={styles.title}>{titles.titles[2].type}</Text>
-          </View>
 
         </ScrollView>
 
@@ -364,7 +412,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignSelf: 'center',
     alignItems: 'center',
-    paddingBottom: 16
+    paddingBottom: 16,
   },
   circle: {
     width: 150,
@@ -374,7 +422,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#fff',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   redcircle: {
     color: '#ff0000',
@@ -390,7 +438,6 @@ const styles = StyleSheet.create({
   },
   value: {
     marginBottom: 15,
-    marginTop: 15,
     fontWeight: 'bold',
     fontSize: 24
   },
@@ -402,5 +449,10 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center'
+  },
+  picker: {
+    width: 150,
+    marginTop: 30,
+    marginBottom: 100
   }
 });
