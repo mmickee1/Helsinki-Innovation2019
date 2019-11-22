@@ -56,7 +56,7 @@
 
 <script>
 import {Chart} from '../components/chart.js';
-import DatePicker from 'react-native-modal-datetime-picker';
+import {DatePicker} from 'react-native-modal-datetime-picker';
 import {LoaderModal} from '../components/loadermodal.js';
 import {ChartSelectorModal} from '../components/chartselectormodal.js';
 export default {
