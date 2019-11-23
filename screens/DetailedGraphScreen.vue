@@ -63,11 +63,12 @@ export default {
   data: function() {
     return {
       chartTypes: [
-        {name: 'Lämpötila', unit: '°C', datapoint: '83556'},
-        {name: "CO2", unit: 'ppm', datapoint: '83551'},
-        {name: 'Kosteus', unit: '%', datapoint: '83552'},
-        {name: 'PM10', unit: 'μg/m3', datapoint: '83554'},
-        {name: 'VOC', unit: 'ppb', datapoint: '83557'},
+        {name: 'Energia', unit: 'kW/h', datapoint: 0, defaultScale: {min: 0, max: 150}},
+        {name: 'Lämpötila', unit: '°C', datapoint: '83556', defaultScale: {min: 20, max: 25}},
+        {name: "CO2", unit: 'ppm', datapoint: '83551', defaultScale: {min: 400, max: 1000}},
+        {name: 'Kosteus', unit: '%', datapoint: '83552', defaultScale: {min: 0, max: 100}},
+        {name: 'PM10', unit: 'μg/m3', datapoint: '83554', defaultScale: {min: 0, max: 10}},
+        {name: 'VOC', unit: 'ppb', datapoint: '83557', defaultScale: {min: 0, max: 1000}},
       ],
 
       chartData: [],
@@ -95,7 +96,16 @@ export default {
   },
 
   async mounted() {
-    this.updateChart(this.currentDate, this.leftChartSelected, this.rightChartSelected);
+    let leftType = 0;
+    let rightType = 1;
+    this.leftChartSelected = leftType;
+    this.chartConfig.leftDataTitle = this.chartTypes[leftType].name;
+    this.chartConfig.leftDataUnit = this.chartTypes[leftType].unit;
+    this.rightChartSelected = rightType;
+    this.chartConfig.rightDataTitle = this.chartTypes[rightType].name;
+    this.chartConfig.rightDataUnit = this.chartTypes[rightType].unit;
+
+    await this.updateChart(this.currentDate, this.leftChartSelected, this.rightChartSelected);
   },
 
   methods: {
@@ -130,8 +140,12 @@ export default {
       let rightDatapoint = this.chartTypes[this.rightChartSelected].datapoint;
 
       const measureTasks = [
-        this.getBuildingMeasurements(buildingInfo.buildingID, leftDatapoint, startDate, endDate),
-        this.getBuildingMeasurements(buildingInfo.buildingID, rightDatapoint, startDate, endDate),
+        this.leftChartSelected == 0
+          ? this.getEnergyConsumption(buildingInfo.buildingID, startDate, startDate, 1)
+          : this.getBuildingMeasurements(buildingInfo.buildingID, leftDatapoint, startDate, endDate),
+        this.rightChartSelected == 0
+          ? this.getEnergyConsumption(buildingInfo.buildingID, startDate, startDate, 1)
+          : this.getBuildingMeasurements(buildingInfo.buildingID, rightDatapoint, startDate, endDate),
       ];
 
       // fetch all measurements in parallel
@@ -154,11 +168,18 @@ export default {
       const tempScale = this.findMinMax(hourlyTemp);
       const co2Scale = this.findMinMax(hourlyCO2);
   
+  /*
       const chartScale = [
         {min: tempScale.min - ((tempScale.max-tempScale.min) * 0.2), max: tempScale.max + ((tempScale.max-tempScale.min) * 0.2)},
         {min: co2Scale.min - ((co2Scale.max-co2Scale.min) * 0.2), max: co2Scale.max + ((co2Scale.max-co2Scale.min) * 0.2)}
       ];
 
+*/
+      const chartScale = [
+        this.chartTypes[this.leftChartSelected].defaultScale,
+        this.chartTypes[this.rightChartSelected].defaultScale,
+      ];
+      
       this.chartData = chartData;
       this.chartScale = chartScale;
     },
@@ -224,6 +245,35 @@ export default {
         hourlyData[hours] = {value: average, time: `${this.formatNumber(hours)}:00`};
       }
       return hourlyData;
+    },
+
+    getEnergyConsumption(buildingID, startTime, endTime, energyType) {
+      return new Promise(async (resolve, reject) => {
+        try {
+          const baseUrl = "https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetConsumptionsByCategory/";
+          const request = `${baseUrl}?$format=json&$token=${this.apiToken}&Building=${buildingID}&StartTime=${startTime}&EndTime=${endTime}&EnergyTypeIDs=${energyType}&TimeGrouping=hour`;
+          const response = await fetch(request);
+          
+          const rawValues = await response.json();
+
+          const results = [];
+
+          rawValues.forEach((item) => {
+            if (item.GroupDescription === "Electricity") {
+              results.push({
+                Value: item.Consumption,
+                CO2Value: item.CO2Value,
+                Timestamp: item.Date,
+              });
+            }
+          });
+
+          resolve(results);
+        }
+        catch (exception) {
+          reject(exception);
+        }
+      });
     },
 
     getBuildingInfo(site) {
