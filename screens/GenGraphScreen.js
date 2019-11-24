@@ -36,6 +36,8 @@ const titles = {
   ]
 };
 
+const getMeasurementInfo = 'GetMeasurementInfo/?&BuildingID='
+const measurementSystem = '&MeasurementSystem=SI&$format=json&$token='
 // Make a request for a user with a given ID
 const apitoken = 'L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU='
 const nuukaApi = 'https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/'
@@ -48,18 +50,10 @@ const datapointerinos = [];
 let datapointerinosvalues = 0;
 
 
-/*
-//Performing multiple concurrent requests
-function getUserAccount() {
-  return axios.get('/user/12345');
-}
-function getUserPermissions() {
-  return axios.get('/user/12345/permissions');
-}
-axios.all([getUserAccount(), getUserPermissions()])
-  .then(axios.spread(function (acct, perms) {
-    // Both requests are now complete
-  }));*/
+const getConsumptionsByCategory = 'GetConsumptionsByCategory/?Building='
+const energyTypeIDs = '&EnergyTypeIDs=1,2' //1 for elecricity and 2 for heating => total consumption
+const timeGrouping = '&TimeGrouping=day&ShowMetaData=false&MeasurementSystem=SI&$format=xml&$token='
+
 
 
 //esimerkki co2 arvojen saamisesta
@@ -124,6 +118,16 @@ export default class GenGraphScreen extends React.Component {
       pickerValue: '',
 
       hourslider: [8, 16],
+
+      energyElect: 0,
+      energyHeat: 0,
+
+      rooms: [],
+      energyDataPoints: [],
+      co2DataPoints: [],
+      pm10DataPoints: [],
+      temperatureDataPoints: [],
+      vocDataPoints: [],
     }
   }
 
@@ -172,6 +176,11 @@ export default class GenGraphScreen extends React.Component {
     this.setState({ co2state: data + ' ppm' })
   }
 
+  updateElecConsumption = (kwh) => {
+    this.setState({ energystate: kwh + ' kWh' })
+    this.setState({ energyElect: kwh + ' kWh' })
+  }
+
   goToNextScreen = (buildingID, timeStart, timeStop, datapointArray, graphType) => {
     console.log(buildingID, timeStart, timeStop, datapointArray, graphType);
     this.props.navigation.navigate('DetailedGraph', {
@@ -199,31 +208,96 @@ export default class GenGraphScreen extends React.Component {
     this.setState({ hourslider: hours })
   }
 
+  updateRooms = (rooms) => {
+    console.log('rooms ' + rooms);
+    // console.log(rooms.key + rooms.value);
+    this.setState({ rooms: rooms })
+  }
+
+
+  /*
+  //Performing multiple concurrent requests
+  function getUserAccount() {
+    return axios.get('/user/12345');
+  }
+  function getUserPermissions() {
+    return axios.get('/user/12345/permissions');
+  }
+  axios.all([getUserAccount(), getUserPermissions()])
+    .then(axios.spread(function (acct, perms) {
+      // Both requests are now complete
+    }));*/
   getValuesFromNuuka = () => {
     console.log('accessing nuuka api');
     this.loading();
-    axios.get(nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS
-      + this.state.datapoint1 + this.state.datapoint2 + this.state.datapoint3
-      + startTimeStatic + this.state.dateStart + endTimeStatic + this.state.dateEnd
-      + timeStampZone + apitoken)
-      .then(datapoints => {
-        datapoints.data.forEach(function (point) {
-          datapointerinos.push(pointObj = {
-            cotwovaluerino: point.Value
-          });
-          datapointerinosvalues = datapointerinosvalues + point.Value;
+    const measurementInfo = nuukaApi + getMeasurementInfo + this.state.buildingID + measurementSystem + apitoken;
+    const measurementDataIDs = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.datapoint1 + this.state.datapoint2 + this.state.datapoint3 + startTimeStatic + this.state.dateStart + endTimeStatic + this.state.dateEnd + timeStampZone + apitoken
+    const constumptionsByCategory = nuukaApi + getConsumptionsByCategory + this.state.buildingID + startTimeStatic + this.state.dateStart + endTimeStatic + this.state.dateEnd + energyTypeIDs + timeGrouping + apitoken
+    axios.get(measurementDataIDs).then(datapoints => {
+      datapoints.data.forEach(function (point) {
+        datapointerinos.push(pointObj = {
+          cotwovaluerino: point.Value
         });
-        var co2value = datapointerinosvalues / datapointerinos.length;
-        co2value = co2value.toFixed(0);
-        this.changeCO2State(co2value);
-        console.log('changed state');
-        console.log('loading finished');
-        this.loadingdone();
-      })
+        datapointerinosvalues = datapointerinosvalues + point.Value;
+      });
+      var co2value = datapointerinosvalues / datapointerinos.length;
+      co2value = co2value.toFixed(0);
+      this.changeCO2State(co2value);
+      console.log('changed state successfully');
+      this.loadingdone();
+    })
       .catch(function (error) {
         console.log(error);
         this.loadingdone();
-      })
+      });
+    axios.get(measurementInfo).then(datapoints => { //CATEGORIA:  eli: points.Category       indoor conditions: co2   indoor conditions: temperature    indoor conditions: pm10 (uq/m3)   indoor conditions: tvoc (ppb)              energiaan: electricity heating
+      //points.Description //katkase siitä vaan luokan numero. voi olla vaikka: I203_QE_09_319_M I203 Tila 319 huoneilman hiilidioksidi. tila/luokka ei tarvitse, vain numero. alkuun voi lisää kokonaisena sen huonelistaan. filter myöhemmin.
+      var roomList = [];
+      var validDataPoints = [];
+      datapoints.data.forEach(function (point) { //validdatapoints and roomlist
+        //console.log(point);
+        if (point.Category === 'indoor conditions: co2') {
+          roomList.push(point.Name);
+          /* roomList.push(po = {
+ 
+             room: point.Name
+           });*/
+        }
+      });
+      console.log('accessed measurementinfo call!!');
+      this.updateRooms(roomList);
+      this.loadingdone();
+    })
+      .catch(function (error) {
+        console.log(error);
+        this.loadingdone();
+      });
+
+    axios.get(constumptionsByCategory).then(datapoints => {
+      var elec = [];
+      var elecnumb = 0;
+      var heat = [];
+      var heatnumb = 0;
+
+      //xml parsing..
+    /*  datapoints.data.forEach(function (point) {
+        if (point.EnergyTypeID == 1) { //1 elecricity, 2 heating
+          elec.push(point.Consumption);
+        }
+        elec.push(pointObj = {
+          consumption: point.Consumption
+        });
+        elecnumb = elecnumb + point.Consumption;
+      });
+      console.log(elecnumb);
+      console.log('accessed consumptionbycategory call!!');
+      this.updateElecConsumption(elecnumb);*/
+      this.loadingdone();
+    })
+      .catch(function (error) {
+        console.log(error);
+        this.loadingdone();
+      });
   }
 
 
@@ -305,14 +379,10 @@ export default class GenGraphScreen extends React.Component {
                 this.selectRoom(itemValue);
               }}>
               <Picker.Item label={""} value={""} />
-              <Picker.Item label={"Room 1"} value={"room1"} />
-              <Picker.Item label={"Room 2"} value={"room2"} />
-              <Picker.Item label={"Room 3"} value={"room3"} />
-              <Picker.Item label={"Room 4"} value={"room4"} />
-              <Picker.Item label={"Room 5"} value={"room5"} />
-              <Picker.Item label={"Room 6"} value={"room6"} />
-              <Picker.Item label={"Room 7"} value={"room7"} />
-              <Picker.Item label={"Room 8"} value={"room8"} />
+              {this.state.rooms.map((item, index) => {
+                return (<Picker.Item label={item} value={index} key={index} />)
+              })}
+
             </Picker>
 
             <MultiSlider
