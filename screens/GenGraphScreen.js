@@ -14,6 +14,7 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 import DatePicker from 'react-native-datepicker'
 import axios from 'axios';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
+import xml2js from 'react-native-xml2js'
 
 
 const titles = {
@@ -52,7 +53,7 @@ let datapointerinosvalues = 0;
 
 const getConsumptionsByCategory = 'GetConsumptionsByCategory/?Building='
 const energyTypeIDs = '&EnergyTypeIDs=1,2' //1 for elecricity and 2 for heating => total consumption
-const timeGrouping = '&TimeGrouping=day&ShowMetaData=false&MeasurementSystem=SI&$format=xml&$token='
+const timeGrouping = '&TimeGrouping=hour&ShowMetaData=false&MeasurementSystem=SI&$format=xml&$token='
 
 
 
@@ -112,6 +113,7 @@ export default class GenGraphScreen extends React.Component {
       datapoint3: 83527 + ';',
       dateStart: '',  //has to be year-month-date
       dateEnd: '',
+      dateToday: '',
 
       showloading: false,
 
@@ -123,6 +125,7 @@ export default class GenGraphScreen extends React.Component {
       energyHeat: 0,
 
       rooms: [],
+      //muista lisää ; joka datapointin jälkeen et query on ok
       energyDataPoints: [],
       co2DataPoints: [],
       pm10DataPoints: [],
@@ -146,8 +149,8 @@ export default class GenGraphScreen extends React.Component {
     };
   };*/
 
-  componentDidMount() {
-    console.log('component did mount');
+  componentWillMount() {
+    console.log('component will mount');
     let that = this;
     var date = new Date().getDate(); //Current Date
     var month = new Date().getMonth() + 1; //Current Month
@@ -160,6 +163,14 @@ export default class GenGraphScreen extends React.Component {
       dateEnd:
         year + '-' + month + '-' + date,
     });
+    that.setState({
+      dateToday:
+        year + '-' + month + '-' + date,
+    })
+  }
+  componentDidMount() {
+    console.log('component did mount');
+    this.getValuesFromNuuka();
   }
 
   testState = () => {
@@ -206,6 +217,7 @@ export default class GenGraphScreen extends React.Component {
   multiSliderValuesChange = (hours) => {
     console.log('data changed: ' + hours);
     this.setState({ hourslider: hours })
+    this.getValuesFromNuuka();
   }
 
   updateRooms = (rooms) => {
@@ -230,33 +242,29 @@ export default class GenGraphScreen extends React.Component {
   getValuesFromNuuka = () => {
     console.log('accessing nuuka api');
     this.loading();
+    const dates = startTimeStatic + this.state.dateStart + "%20" + this.state.hourslider[0] + ":00" + endTimeStatic + this.state.dateEnd + "%20" + this.state.hourslider[1] + ":00";
     const measurementInfo = nuukaApi + getMeasurementInfo + this.state.buildingID + measurementSystem + apitoken;
-    const measurementDataIDs = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.datapoint1 + this.state.datapoint2 + this.state.datapoint3 + startTimeStatic + this.state.dateStart + endTimeStatic + this.state.dateEnd + timeStampZone + apitoken
-    const constumptionsByCategory = nuukaApi + getConsumptionsByCategory + this.state.buildingID + startTimeStatic + this.state.dateStart + endTimeStatic + this.state.dateEnd + energyTypeIDs + timeGrouping + apitoken
-    axios.get(measurementDataIDs).then(datapoints => {
-      datapoints.data.forEach(function (point) {
-        datapointerinos.push(pointObj = {
-          cotwovaluerino: point.Value
-        });
-        datapointerinosvalues = datapointerinosvalues + point.Value;
-      });
-      var co2value = datapointerinosvalues / datapointerinos.length;
-      co2value = co2value.toFixed(0);
-      this.changeCO2State(co2value);
-      console.log('changed state successfully');
-      this.loadingdone();
-    })
-      .catch(function (error) {
-        console.log(error);
-        this.loadingdone();
-      });
+    const measurementDataIDsCO2 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.datapoint1 + this.state.datapoint2 + this.state.datapoint3 + dates + timeStampZone + apitoken //muuta datapointit ja nimi
+    const constumptionsByCategory = nuukaApi + getConsumptionsByCategory + this.state.buildingID + dates + energyTypeIDs + timeGrouping + apitoken
+
+    //tässä saa buildingID:llä haettua kaikki datapointit per categoria. myös huonelistaukset.
     axios.get(measurementInfo).then(datapoints => { //CATEGORIA:  eli: points.Category       indoor conditions: co2   indoor conditions: temperature    indoor conditions: pm10 (uq/m3)   indoor conditions: tvoc (ppb)              energiaan: electricity heating
       //points.Description //katkase siitä vaan luokan numero. voi olla vaikka: I203_QE_09_319_M I203 Tila 319 huoneilman hiilidioksidi. tila/luokka ei tarvitse, vain numero. alkuun voi lisää kokonaisena sen huonelistaan. filter myöhemmin.
       var roomList = [];
-      var validDataPoints = [];
+
+      var roomsList = {}; //   roomsList.push({
+      // [point.]: product.votes
+      //});
+      var validDataPointsEnergy = [];
+      var validDataPointsCO2 = [];
+      var validDataPointsVOC = [];
+      var validDataPointsPM10 = [];
+      var validDataPointsTemperature = [];
       datapoints.data.forEach(function (point) { //validdatapoints and roomlist
         //console.log(point);
-        if (point.Category === 'indoor conditions: co2') {
+        if (point.Category === 'indoor conditions: co2') { //jokasest omasta tämmöne ja lisää ne omiin listoihin?
+          //lisää roomlist name ja datapoint number
+
           roomList.push(point.Name);
           /* roomList.push(po = {
  
@@ -273,38 +281,68 @@ export default class GenGraphScreen extends React.Component {
         this.loadingdone();
       });
 
-    axios.get(constumptionsByCategory).then(datapoints => {
-      var elec = [];
-      var elecnumb = 0;
-      var heat = [];
-      var heatnumb = 0;
 
-      //xml parsing..
-    /*  datapoints.data.forEach(function (point) {
-        if (point.EnergyTypeID == 1) { //1 elecricity, 2 heating
-          elec.push(point.Consumption);
-        }
-        elec.push(pointObj = {
-          consumption: point.Consumption
+    //tässä hakee huoneelle (huoneen datapointeilla) olevat co2 arvot. samanlaiset kutsut muillekin 
+    axios.get(measurementDataIDsCO2).then(datapoints => {
+      console.log('GET REQUEST: ' + measurementDataIDsCO2);
+      datapoints.data.forEach(function (point) {
+        datapointerinos.push(pointObj = {
+          cotwovaluerino: point.Value
         });
-        elecnumb = elecnumb + point.Consumption;
+        datapointerinosvalues = datapointerinosvalues + point.Value;
       });
-      console.log(elecnumb);
-      console.log('accessed consumptionbycategory call!!');
-      this.updateElecConsumption(elecnumb);*/
+      var co2value = datapointerinosvalues / datapointerinos.length;
+      co2value = co2value.toFixed(0);
+      this.changeCO2State(co2value);
+      console.log('changed state successfully');
       this.loadingdone();
     })
       .catch(function (error) {
         console.log(error);
         this.loadingdone();
       });
+
+      //hae ehkä energiakulutus toisesta endpointista
+    /*axios.get(constumptionsByCategory).then(datapoints => {
+      var elec = [];
+      var elecnumb = 0;
+      var heat = [];
+      var heatnumb = 0;
+      console.log('GET REQUEST: ' + constumptionsByCategory);
+      xml2js.parseString(datapoints.data, function (err, result) {
+        result.Result.NewDataSet.forEach(function (point) {
+          point.Table1.forEach(function (point) { //kato viel et matchaa numerot oikein ! et heat+elec on oikeist
+            console.log(point.Consumption[0]);
+            elec.push(pointObj = {
+              elecvalue: parseInt(point.Consumption[0])
+            });
+            elecnumb = elecnumb + parseInt(point.Consumption[0]); //parseInt(point.Consumption)
+          });
+        });
+        /* if (point.EnergyTypeID == 1) { //1 elecricity,  2 heating          //voi laskee yhteen mutta kato et kwh. eikä water kuutiometri tms..
+           elec.push(point.Consumption);
+           console.log('ADDED CONSUMPTION POINT: ' + point.Consumption);
+         }*/
+    //elecvalue = elecvalue.toFixed(0);
+    /*    console.log('elecnumb: ' + elecnumb);
+        console.log('elecvalue length: ' + elec.length);
+      });
+      console.log('accessed consumptionbycategory call!!');
+      var elecvalue = elecnumb / elec.length;
+      elecvalue = elecvalue.toFixed(0);
+      this.updateElecConsumption(elecvalue); //updates elec consumption average per day during selected time period. NOT total consumption!!
+      this.loadingdone();
+    })
+      .catch(function (error) {
+        console.log(error);
+      });*/
   }
 
 
   render() {
     var x = 0;
     return (
-      <View style={styles.container}>
+      <View style={styles.container} >
 
         <DatePicker
           style={{ width: 150 }}
@@ -313,7 +351,7 @@ export default class GenGraphScreen extends React.Component {
           placeholder={this.state.dateStart}
           format="YYYY-MM-DD"
           minDate="2015-05-01"
-          maxDate="2025-06-01"
+          maxDate={this.state.dateToday}
           confirmBtnText="Confirm"
           cancelBtnText="Cancel"
           customStyles={{
@@ -336,16 +374,17 @@ export default class GenGraphScreen extends React.Component {
         {this.state.showloading &&
           <View>
             <ActivityIndicator />
-          </View>}
+          </View>
+        }
 
-        <DatePicker
+        < DatePicker
           style={{ width: 150 }}
           date={this.state.dateEnd}
           mode="date"
           placeholder={this.state.dateEnd}
           format="YYYY-MM-DD"
           minDate={this.state.dateStart}
-          maxDate="2025-06-01"
+          maxDate={this.state.dateToday}
           confirmBtnText="Confirm"
           cancelBtnText="Cancel"
           customStyles={{
@@ -362,11 +401,10 @@ export default class GenGraphScreen extends React.Component {
           onDateChange={(endTime) => {
             this.setState({ dateEnd: endTime })
             console.log('date changed ' + endTime);
-            this.loading();
             this.getValuesFromNuuka();
           }}
         />
-        <ScrollView style={styles.child}>
+        < ScrollView style={styles.child} >
 
           <View style={styles.picker}>
             <Text>
@@ -390,7 +428,7 @@ export default class GenGraphScreen extends React.Component {
               sliderLength={144}
               onValuesChange={this.multiSliderValuesChange}
               min={0}
-              max={24}
+              max={23}
               step={1}
             />
             <Text style={styles.titlee}>Kellonaika:   {this.state.hourslider[0]}  -  {this.state.hourslider[1]}</Text>
@@ -420,7 +458,7 @@ export default class GenGraphScreen extends React.Component {
           </View>
 
 
-        </ScrollView>
+        </ScrollView >
 
 
         <ScrollView style={styles.childright}>
@@ -461,7 +499,7 @@ export default class GenGraphScreen extends React.Component {
           </View>
 
         </ScrollView>
-      </View>
+      </View >
     );
   }
 }
