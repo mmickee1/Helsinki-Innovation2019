@@ -232,7 +232,7 @@ export default class GenGraphScreen extends React.Component {
 
       for (let point of datapoints.data) {
         if (point.Category === 'indoor conditions: co2') {
-          if (co2dpcalculator === 5) {
+          if (co2dpcalculator === 20) {
             break;
           }
           roomList.push(point.Name);
@@ -244,7 +244,7 @@ export default class GenGraphScreen extends React.Component {
 
       for (let point of datapoints.data) {
         if (point.Category === 'indoor conditions: tvoc (ppb)') {
-          if (vocdpcalculator === 5) {
+          if (vocdpcalculator === 20) {
             break;
           }
           validDataPointsVOC = validDataPointsVOC + point.DataPointID + ';';
@@ -252,11 +252,21 @@ export default class GenGraphScreen extends React.Component {
         }
       }
 
+      for (let point of datapoints.data) {
+        if (point.Category === 'indoor conditions: pm10 (uq/m3)') {
+          if (pm10dpcalculator === 20) {
+            break;
+          }
+          validDataPointsPM10 = validDataPointsPM10 + point.DataPointID + ';';
+          pm10dpcalculator += 1;
+        }
+      }
 
 
       this.setState({ rooms: roomList })
       this.setState({ co2dp: validDataPointsCO2 })
       this.setState({ vocdp: validDataPointsVOC })
+      this.setState({ pm10dp: validDataPointsPM10 })
       console.log('COMPONENT FETCHED AND RECEIVED DATAPOINTS');
       this.getValuesFromNuuka();
     }).catch(function (error) {
@@ -300,6 +310,19 @@ export default class GenGraphScreen extends React.Component {
     this.setState({ vocstate: data + ' μg / m3' })
   }
 
+  changePM10state = (data) => {
+    //pm10 0-10, 10-20, 20+
+    data = data.toFixed(2);
+    if (data > 0 && data <= 10) {
+      this.setState({ pm10color: styles.greencircle })
+    } else if (data > 10 && data <= 20) {
+      this.setState({ pm10color: styles.yellowcircle })
+    } else {
+      this.setState({ pm10color: styles.redcircle })
+    }
+    this.setState({ pm10state: data + ' μg / m3' })
+  }
+
   updateElecConsumption = (kwh) => {
     this.setState({ energystate: kwh + ' kWh' })
     this.setState({ energyElect: kwh + ' kWh' })
@@ -328,14 +351,12 @@ export default class GenGraphScreen extends React.Component {
   }
 
   multiSliderValuesChange = (hours) => {
-    console.log('data changed: ' + hours);
     this.setState({ hourslider: hours })
     this.getValuesFromNuuka();
   }
 
   updateRooms = (rooms) => {
     console.log('rooms ' + rooms);
-    // console.log(rooms.key + rooms.value);
     this.setState({ rooms: rooms })
   }
 
@@ -357,30 +378,28 @@ export default class GenGraphScreen extends React.Component {
     }));*/
 
 
-
   /* const p = new Promise(resovle => setTimeout(resovle));
    new Promise(resolve => resolve(p)).then(() => {
      console.log("tick 3");
    });
-
    p.then(() => {
      console.log("tick 1");
    }).then(() => {
      console.log("tick 2");
    });*/
   getValuesFromNuuka = () => {
-    // this.componentDidMount().finally(() => 
     console.log('accessing nuuka api for values');
     this.loading();
     const dates = startTimeStatic + this.state.dateStart + "%20" + this.state.hourslider[0] + ":00" + endTimeStatic + this.state.dateEnd + "%20" + this.state.hourslider[1] + ":00";
     // const measurementDataIDsCO2 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.datapoint1 + this.state.datapoint2 + this.state.datapoint3 + dates + timeStampZone + apitoken //muuta datapointit ja nimi
     const constumptionsByCategory = nuukaApi + getConsumptionsByCategory + this.state.buildingID + dates + energyTypeIDs + timeGrouping + apitoken;
 
-
-    console.log(this.state.co2dp);
-    console.log(this.state.vocdp);
     const measurementDataIDsCO2 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.co2dp + dates + timeStampZone + apitoken;
     const measurementDataIDsVOC = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.vocdp + dates + timeStampZone + apitoken;
+    const measurementDataIDsENERGY = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.energydp + dates + timeStampZone + apitoken;
+    const measurementDataIDsPM10 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.pm10dp + dates + timeStampZone + apitoken;
+    const measurementDataIDsTEMPERATURE = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.tempdp + dates + timeStampZone + apitoken;
+
 
 
     //CO2 VALUE FETCHING
@@ -395,6 +414,23 @@ export default class GenGraphScreen extends React.Component {
       co2value = co2value.toFixed(0);
       this.changeCO2State(co2value);
       console.log("CO2value after update: " + co2value);
+    })
+      .catch(function (error) {
+        console.log(error);
+        this.loadingdone();
+      });
+
+    //PM10 VALUE FETCHING
+    axios.get(measurementDataIDsPM10).then(datapoints => {
+      datapoints.data.forEach(function (point) {
+        datapointerinospm10.push(pointObj = {
+          x: point.Value
+        });
+        datapointerinosvaluespm10 = datapointerinosvaluespm10 + point.Value;
+      });
+      var pm10value = datapointerinosvaluespm10 / datapointerinospm10.length;
+      this.changePM10state(pm10value);
+      console.log("pm10value after update: " + pm10value);
     })
       .catch(function (error) {
         console.log(error);
@@ -419,6 +455,8 @@ export default class GenGraphScreen extends React.Component {
         console.log(error);
         this.loadingdone();
       });
+
+
 
     //hae ehkä energiakulutus toisesta endpointista
     /*axios.get(constumptionsByCategory).then(datapoints => {
