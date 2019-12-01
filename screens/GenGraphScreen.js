@@ -14,8 +14,6 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 import DatePicker from 'react-native-datepicker'
 import axios from 'axios';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
-import xml2js from 'react-native-xml2js'
-import { inherits } from 'util';
 
 
 const titles = {
@@ -232,7 +230,7 @@ export default class GenGraphScreen extends React.Component {
 
       for (let point of datapoints.data) {
         if (point.Category === 'indoor conditions: co2') {
-          if (co2dpcalculator === 20) {
+          if (co2dpcalculator === 10) {
             break;
           }
           roomList.push(point.Name);
@@ -244,7 +242,7 @@ export default class GenGraphScreen extends React.Component {
 
       for (let point of datapoints.data) {
         if (point.Category === 'indoor conditions: tvoc (ppb)') {
-          if (vocdpcalculator === 20) {
+          if (vocdpcalculator === 10) {
             break;
           }
           validDataPointsVOC = validDataPointsVOC + point.DataPointID + ';';
@@ -254,7 +252,7 @@ export default class GenGraphScreen extends React.Component {
 
       for (let point of datapoints.data) {
         if (point.Category === 'indoor conditions: pm10 (uq/m3)') {
-          if (pm10dpcalculator === 20) {
+          if (pm10dpcalculator === 10) {
             break;
           }
           validDataPointsPM10 = validDataPointsPM10 + point.DataPointID + ';';
@@ -262,11 +260,33 @@ export default class GenGraphScreen extends React.Component {
         }
       }
 
+      for (let point of datapoints.data) {
+        if (point.Category === 'electricity') {  //heating is in MWh , change it first , then add this to if statement /* || point.Category === 'heating'*/
+          if (energydpcalculator === 10) {
+            break;
+          }
+          validDataPointsEnergy = validDataPointsEnergy + point.DataPointID + ';';
+          energydpcalculator += 1;
+        }
+      }
+
+      for (let point of datapoints.data) {
+        if (point.Category === 'indoor conditions: temperature') {
+          if (temp2dpcalculator === 10) {
+            break;
+          }
+          validDataPointsTemperature = validDataPointsTemperature + point.DataPointID + ';';
+          temp2dpcalculator += 1;
+          console.log('temperaturedpcalculator size: ' + temp2dpcalculator);
+        }
+      }
 
       this.setState({ rooms: roomList })
       this.setState({ co2dp: validDataPointsCO2 })
       this.setState({ vocdp: validDataPointsVOC })
       this.setState({ pm10dp: validDataPointsPM10 })
+      this.setState({ energydp: validDataPointsEnergy })
+      this.setState({ tempdp: validDataPointsTemperature })
       console.log('COMPONENT FETCHED AND RECEIVED DATAPOINTS');
       this.getValuesFromNuuka();
     }).catch(function (error) {
@@ -290,37 +310,62 @@ export default class GenGraphScreen extends React.Component {
       this.setState({ co2color: styles.greencircle })
     } else if (data > 750 && data <= 950) {
       this.setState({ co2color: styles.yellowcircle })
-    } else {
+    } else if (data > 950) {
       this.setState({ co2color: styles.redcircle })
+    } else {
+      this.setState({ co2color: styles.neutralcircle })
     }
     this.setState({ co2state: data + ' ppm' })
   }
 
   changeVOCstate = (data) => {
     //voc 0-0.5 , 0.5-1, 1+   //ppm = (μg / m3)  / 1000
-    data = data / 1000;
-    data = data.toFixed(2);
     if (data > 0 && data <= 0.5) {
       this.setState({ voccolor: styles.greencircle })
     } else if (data > 0.5 && data <= 1) {
       this.setState({ voccolor: styles.yellowcircle })
-    } else {
+    } else if (data > 1) {
       this.setState({ voccolor: styles.redcircle })
+    } else {
+      this.setState({ voccolor: styles.neutralcircle })
     }
     this.setState({ vocstate: data + ' μg / m3' })
   }
 
   changePM10state = (data) => {
     //pm10 0-10, 10-20, 20+
-    data = data.toFixed(2);
     if (data > 0 && data <= 10) {
       this.setState({ pm10color: styles.greencircle })
     } else if (data > 10 && data <= 20) {
       this.setState({ pm10color: styles.yellowcircle })
-    } else {
+    } else if (data > 20) {
       this.setState({ pm10color: styles.redcircle })
+    } else {
+      this.setState({ pm10color: styles.neutralcircle })
     }
     this.setState({ pm10state: data + ' μg / m3' })
+  }
+
+  changeENERGYstate = (data) => {
+    //energy not yet calculated per m2. Just showing raw data value in kWh.
+    this.setState({ energycolor: styles.neutralcircle })
+    this.setState({ energystate: data + ' kWh' })
+    this.setState({ energyElect: data + ' kWh' })
+  }
+
+  changeTEMPERATUREstate = (data) => {
+    //lämpötila 21-23,  20-21/23-25, -20 25+
+    console.log('average temperature: ' + data);
+    if (data > 21 && data <= 23) {
+      this.setState({ temperaturecolor: styles.greencircle })
+    } else if ((data > 20 || data <= 21) || (data > 23 || data <= 25)) {
+      this.setState({ temperaturecolor: styles.yellowcircle })
+    } else if (data > 25 || data < 20) {
+      this.setState({ temperaturecolor: styles.redcircle })
+    } else {
+      this.setState({ temperaturecolor: styles.neutralcircle })
+    }
+    this.setState({ temperaturestate: data + ' C' })
   }
 
   updateElecConsumption = (kwh) => {
@@ -405,10 +450,12 @@ export default class GenGraphScreen extends React.Component {
     //CO2 VALUE FETCHING
     axios.get(measurementDataIDsCO2).then(datapoints => {
       datapoints.data.forEach(function (point) {
-        datapointerinosco2.push(pointObj = {
-          cotwovaluerino: point.Value
-        });
-        datapointerinosvaluesco2 = datapointerinosvaluesco2 + point.Value;
+        if (point.Value !== 0) {
+          datapointerinosco2.push(pointObj = {
+            cotwovaluerino: point.Value
+          });
+          datapointerinosvaluesco2 = datapointerinosvaluesco2 + point.Value;
+        }
       });
       var co2value = datapointerinosvaluesco2 / datapointerinosco2.length;
       co2value = co2value.toFixed(0);
@@ -420,15 +467,59 @@ export default class GenGraphScreen extends React.Component {
         this.loadingdone();
       });
 
+    //electricity
+    axios.get(measurementDataIDsENERGY).then(datapoints => {
+      datapoints.data.forEach(function (point) {
+        if (point.Value !== 0) {
+          datapointerinosenergy.push(pointObj = {
+            x: point.Value
+          });
+          datapointerinosvaluesenergy = datapointerinosvaluesenergy + point.Value;
+        }
+      });
+      var energyvalue = datapointerinosvaluesenergy / datapointerinosenergy.length;
+      energyvalue = energyvalue.toFixed(0);
+      this.changeENERGYstate(energyvalue);
+      console.log("energyvalue after update: " + energyvalue);
+    })
+      .catch(function (error) {
+        console.log(error);
+        this.loadingdone();
+      });
+
+    //temperature
+    axios.get(measurementDataIDsTEMPERATURE).then(datapoints => {
+      console.log('query ' + measurementDataIDsTEMPERATURE);
+      datapoints.data.forEach(function (point) {
+        if (point.Value !== 0) {
+          datapointerinostemperature.push(pointObj = {
+            x: point.Value
+          });
+          datapointerinosvaluestemperature = datapointerinosvaluestemperature + point.Value;
+        }
+      });
+      var temperaturevalue = datapointerinosvaluestemperature / datapointerinostemperature.length;
+      console.log('temperaturevalue after axios ' + temperaturevalue);
+      temperaturevalue = temperaturevalue.toFixed(1);
+      this.changeTEMPERATUREstate(temperaturevalue);
+    })
+      .catch(function (error) {
+        console.log(error);
+        this.loadingdone();
+      });
+
     //PM10 VALUE FETCHING
     axios.get(measurementDataIDsPM10).then(datapoints => {
       datapoints.data.forEach(function (point) {
-        datapointerinospm10.push(pointObj = {
-          x: point.Value
-        });
-        datapointerinosvaluespm10 = datapointerinosvaluespm10 + point.Value;
+        if (point.Value !== 0) {
+          datapointerinospm10.push(pointObj = {
+            x: point.Value
+          });
+          datapointerinosvaluespm10 = datapointerinosvaluespm10 + point.Value;
+        }
       });
       var pm10value = datapointerinosvaluespm10 / datapointerinospm10.length;
+      pm10value = pm10value.toFixed(2);
       this.changePM10state(pm10value);
       console.log("pm10value after update: " + pm10value);
     })
@@ -440,12 +531,16 @@ export default class GenGraphScreen extends React.Component {
     //VOC VALUE FETCHING   
     axios.get(measurementDataIDsVOC).then(datapoints => {
       datapoints.data.forEach(function (point) {
-        datapointerinosvoc.push(pointObj = {
-          x: point.Value
-        });
-        datapointerinosvaluesvoc = datapointerinosvaluesvoc + point.Value;
+        if (point.Value !== 0) {
+          datapointerinosvoc.push(pointObj = {
+            x: point.Value
+          });
+          datapointerinosvaluesvoc = datapointerinosvaluesvoc + point.Value;
+        }
       });
       var vocvalue = datapointerinosvaluesvoc / datapointerinosvoc.length;
+      vocvalue = vocvalue / 1000;
+      vocvalue = vocvalue.toFixed(2);
       this.changeVOCstate(vocvalue);
       console.log("VOCvalue after update: " + vocvalue);
       this.setState({ loading: 'false' })
@@ -578,6 +673,7 @@ export default class GenGraphScreen extends React.Component {
 
           <View style={styles.picker}>
 
+            <Text>Valitun ajanjakson keskiarvot.</Text>
             <Text>RAKENNUKSEN NIMI</Text>
 
             <MultiSlider
