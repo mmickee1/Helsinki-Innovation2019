@@ -36,6 +36,8 @@ const titles = {
   ]
 };
 
+const getMeasurementInfo = 'GetMeasurementInfo/?&BuildingID='
+const measurementSystem = '&MeasurementSystem=SI&$format=json&$token='
 // Make a request for a user with a given ID
 const apitoken = 'L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU='
 const nuukaApi = 'https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/'
@@ -44,22 +46,26 @@ const dataPointIDS = '&DataPointIDs='
 const startTimeStatic = '&StartTime='
 const endTimeStatic = '&EndTime='
 const timeStampZone = '&TimestampTimeZone=UTCOffset&MeasurementSystem=SI&$format=json&$token='
-const datapointerinos = [];
-let datapointerinosvalues = 0;
+var datapointerinosco2 = [];
+let datapointerinosvaluesco2 = 0;
+
+var datapointerinosvoc = [];
+let datapointerinosvaluesvoc = 0;
+
+var datapointerinospm10 = [];
+let datapointerinosvaluespm10 = 0;
+
+var datapointerinosenergy = [];
+let datapointerinosvaluesenergy = 0;
+
+var datapointerinostemperature = [];
+let datapointerinosvaluestemperature = 0;
 
 
-/*
-//Performing multiple concurrent requests
-function getUserAccount() {
-  return axios.get('/user/12345');
-}
-function getUserPermissions() {
-  return axios.get('/user/12345/permissions');
-}
-axios.all([getUserAccount(), getUserPermissions()])
-  .then(axios.spread(function (acct, perms) {
-    // Both requests are now complete
-  }));*/
+const getConsumptionsByCategory = 'GetConsumptionsByCategory/?Building='
+const energyTypeIDs = '&EnergyTypeIDs=1,2' //1 for elecricity and 2 for heating => total consumption
+const timeGrouping = '&TimeGrouping=hour&ShowMetaData=false&MeasurementSystem=SI&$format=xml&$token='
+
 
 
 //esimerkki co2 arvojen saamisesta
@@ -79,6 +85,37 @@ I received 450-650 from nuuka api
 >40,000     ppm	    Exposure may lead to serious oxygen deprivation resulting in permanent brain damage, 
                     coma, even death.*/
 
+
+/* Nuuka data:
+Min kesä	Max kesä	Min talvi	Max talvi	Min kesä	Max kesä	Min talvi	Max talvi	Min kesä	Max kesä	Min talvi	Max talvi
+Sisälämpötila (C)	22	25	20,5	22,5	21	26	20,5	23	20	27	20	25
+Suhteellinen ilmankosteus (%)	 	 	25	45	 	 	 	 	 	 	 	 
+CO2 (ppm)	0	750	0	750	0	950	0	950	0	1200	0	1200
+Haihtuvien orgaanisten yhdisteiden kokonaismäärä (TVOC, ppb)	0	660	0	660	0	660	0	660	 	 	 	 
+Paine-ero sisä / ulkona (Pa)	-2	2	-2	2	-2	2	-2	2	 	 	 	 
+PM2,5 (μg / m3)	0	10	0	10	0	10	0	10	0	25	0	25
+PM2,5 sisällä / ulkopuolella (0-1)	0	0,5	0	0,5	0	0,7	0	0,7	 	 	 	 
+PM10 (μg / m3)	0	25	0	25	0	25	0	25	 	 	 	 
+Tuloilman lämpötila (C)	 	 	17	19	 	 	17	19	 	 	 	 
+Vetoa aistivien osuus (%)	0	10	0	10	0	15	0	15	 	 	 	 
+Ilman liikenopeus (m / s)	0	0,2	0	0,15	0	0,25	0	0,2	0	0,3	0	0,2
+Radonpitoisuus (Bq / m3)	0	100	0	100	0	100	0	100	0	200	0	200*/
+
+/* eli green, yellow, red
+lämpötila 21-23,  20-21/23-25, -20 25+
+co2  0-750, 750-950, 950+
+pm10 0-10, 10-20, 20+
+voc 0-0.5 , 0.5-1, 1+   //ppm = (μg / m3)  / 1000
+energy WHITE CIRLCE, cant be calculated yet before nuuka's api is updated 
+*/
+
+/*
+TVOC Level mg/m3	   Level of Concern
+Less than 0.3 mg/m3	   Low
+0.3 to 0.5 mg/m3	   Acceptable
+0.5 to 1 mg/m3	   Marginal
+1 to 3 mg/m3	   High*/
+
 /*
           <TouchableOpacity onPress={() => {
 this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[2].type);
@@ -97,7 +134,7 @@ export default class GenGraphScreen extends React.Component {
     console.log(props);
     //receive here id set as building id
     this.state = {
-      mystate: 'test',
+      loading: 'initial',
       co2state: 0, //ppm
       pm10state: 0, //ppm
       vocstate: 0, //ppm
@@ -105,7 +142,7 @@ export default class GenGraphScreen extends React.Component {
       temperaturestate: 0,
       cotwovaluerino: 0,
       typestate: 0,
-      energycolor: styles.greencircle,
+      energycolor: styles.neutralcircle,
       temperaturecolor: styles.greencircle,
       co2color: styles.greencircle,
       pm10color: styles.greencircle,
@@ -118,32 +155,35 @@ export default class GenGraphScreen extends React.Component {
       datapoint3: 83527 + ';',
       dateStart: '',  //has to be year-month-date
       dateEnd: '',
+      dateToday: '',
 
       showloading: false,
 
       pickerValue: '',
 
       hourslider: [8, 16],
+
+      energyElect: 0,
+      energyHeat: 0,
+
+      rooms: ['room1'],
+      //muista lisää ; joka datapointin jälkeen et query on ok
+      co2dp: '83511;',
+      pm10dp: '',
+      vocdp: '',
+      tempdp: '',
+      energydp: '',
+
+      energyDataPoints: [],
+      co2DataPoints: [],
+      pm10DataPoints: [],
+      temperatureDataPoints: [],
+      vocDataPoints: [],
     }
   }
 
-  //something like this. not yet working..
-  /*static defaultNavigationOptions = ({ navigation }) => {
-    console.log('inside nav' + navigation)
-    return {
-      headerRight: () => (
-        <Button
-          //onPress={navigation.getParam('increaseCount')}
-          //title="+1"
-         // color={Platform.OS === 'ios' ? '#fff' : null}
-         title='hey'
-        />
-      ),
-    };
-  };*/
-
-  componentDidMount() {
-    console.log('component did mount');
+  componentWillMount() {
+    console.log('component will mount');
     let that = this;
     var date = new Date().getDate(); //Current Date
     var month = new Date().getMonth() + 1; //Current Month
@@ -156,20 +196,181 @@ export default class GenGraphScreen extends React.Component {
       dateEnd:
         year + '-' + month + '-' + date,
     });
+    that.setState({
+      dateToday:
+        year + '-' + month + '-' + date,
+    })
+    that.setState({
+      loading: 'true'
+    });
+    // that.prefixvalues();
   }
 
-  testState = () => {
-    this.setState({ mystate: 'updated' })
+
+  //max datapoints for one request is 100!!!
+  prefixvalues() {
+    var measurementInfo = nuukaApi + getMeasurementInfo + this.state.buildingID + measurementSystem + apitoken;
+    axios.get(measurementInfo).then(datapoints => { //CATEGORIA:  eli: points.Category       indoor conditions: co2   indoor conditions: temperature    indoor conditions: pm10 (uq/m3)   indoor conditions: tvoc (ppb)              energiaan: electricity heating
+      var roomList = [];
+
+      var validDataPointsEnergy = '';
+      var energydpcalculator = 0;
+
+      var validDataPointsCO2 = '';
+      var co2dpcalculator = 0;
+
+      var validDataPointsVOC = '';
+      var vocdpcalculator = 0;
+
+      var validDataPointsPM10 = '';
+      var pm10dpcalculator = 0;
+
+      var validDataPointsTemperature = '';
+      var temp2dpcalculator = 0;
+
+      for (let point of datapoints.data) {
+        if (point.Category === 'indoor conditions: co2') {
+          if (co2dpcalculator === 10) {
+            break;
+          }
+          roomList.push(point.Name);
+          validDataPointsCO2 = validDataPointsCO2 + point.DataPointID + ';';
+          co2dpcalculator += 1;
+          console.log('co2dpcalculator size: ' + co2dpcalculator);
+        }
+      }
+
+      for (let point of datapoints.data) {
+        if (point.Category === 'indoor conditions: tvoc (ppb)') {
+          if (vocdpcalculator === 10) {
+            break;
+          }
+          validDataPointsVOC = validDataPointsVOC + point.DataPointID + ';';
+          vocdpcalculator += 1;
+        }
+      }
+
+      for (let point of datapoints.data) {
+        if (point.Category === 'indoor conditions: pm10 (uq/m3)') {
+          if (pm10dpcalculator === 10) {
+            break;
+          }
+          validDataPointsPM10 = validDataPointsPM10 + point.DataPointID + ';';
+          pm10dpcalculator += 1;
+        }
+      }
+
+      for (let point of datapoints.data) {
+        if (point.Category === 'electricity') {  //heating is in MWh , change it first , then add this to if statement /* || point.Category === 'heating'*/
+          if (energydpcalculator === 10) {
+            break;
+          }
+          validDataPointsEnergy = validDataPointsEnergy + point.DataPointID + ';';
+          energydpcalculator += 1;
+        }
+      }
+
+      for (let point of datapoints.data) {
+        if (point.Category === 'indoor conditions: temperature') {
+          if (temp2dpcalculator === 10) {
+            break;
+          }
+          validDataPointsTemperature = validDataPointsTemperature + point.DataPointID + ';';
+          temp2dpcalculator += 1;
+          console.log('temperaturedpcalculator size: ' + temp2dpcalculator);
+        }
+      }
+
+      this.setState({ rooms: roomList })
+      this.setState({ co2dp: validDataPointsCO2 })
+      this.setState({ vocdp: validDataPointsVOC })
+      this.setState({ pm10dp: validDataPointsPM10 })
+      this.setState({ energydp: validDataPointsEnergy })
+      this.setState({ tempdp: validDataPointsTemperature })
+      console.log('COMPONENT FETCHED AND RECEIVED DATAPOINTS');
+      this.getValuesFromNuuka();
+    }).catch(function (error) {
+      console.log(error);
+    });
   }
+
+  componentDidMount() {
+    console.log('component did mount');
+    this.checkPrefix();
+    //this.getValuesFromNuuka();
+  }
+
+  checkPrefix() {
+    this.prefixvalues();
+  }
+
   changeCO2State = (data) => {
-    if (data > 0 && data < 1000) {
+    //0-750, 750-950, 950+
+    if (data > 0 && data <= 750) {
+      this.setState({ co2color: styles.greencircle })
+    } else if (data > 750 && data <= 950) {
       this.setState({ co2color: styles.yellowcircle })
-    } else if (data > 1000 && data < 2000) {
+    } else if (data > 950) {
       this.setState({ co2color: styles.redcircle })
     } else {
-      this.setState({ co2color: styles.greencircle })
+      this.setState({ co2color: styles.neutralcircle })
     }
     this.setState({ co2state: data + ' ppm' })
+  }
+
+  changeVOCstate = (data) => {
+    //voc 0-0.5 , 0.5-1, 1+   //ppm = (μg / m3)  / 1000
+    if (data > 0 && data <= 0.5) {
+      this.setState({ voccolor: styles.greencircle })
+    } else if (data > 0.5 && data <= 1) {
+      this.setState({ voccolor: styles.yellowcircle })
+    } else if (data > 1) {
+      this.setState({ voccolor: styles.redcircle })
+    } else {
+      this.setState({ voccolor: styles.neutralcircle })
+    }
+    this.setState({ vocstate: data + ' μg / m3' })
+  }
+
+  changePM10state = (data) => {
+    //pm10 0-10, 10-20, 20+
+    if (data > 0 && data <= 10) {
+      this.setState({ pm10color: styles.greencircle })
+    } else if (data > 10 && data <= 20) {
+      this.setState({ pm10color: styles.yellowcircle })
+    } else if (data > 20) {
+      this.setState({ pm10color: styles.redcircle })
+    } else {
+      this.setState({ pm10color: styles.neutralcircle })
+    }
+    this.setState({ pm10state: data + ' μg / m3' })
+  }
+
+  changeENERGYstate = (data) => {
+    //energy not yet calculated per m2. Just showing raw data value in kWh.
+    this.setState({ energycolor: styles.neutralcircle })
+    this.setState({ energystate: data + ' kWh' })
+    this.setState({ energyElect: data + ' kWh' })
+  }
+
+  changeTEMPERATUREstate = (data) => {
+    //lämpötila 21-23,  20-21/23-25, -20 25+
+    console.log('average temperature: ' + data);
+    if (data > 21 && data <= 23) {
+      this.setState({ temperaturecolor: styles.greencircle })
+    } else if ((data > 20 || data <= 21) || (data > 23 || data <= 25)) {
+      this.setState({ temperaturecolor: styles.yellowcircle })
+    } else if (data > 25 || data < 20) {
+      this.setState({ temperaturecolor: styles.redcircle })
+    } else {
+      this.setState({ temperaturecolor: styles.neutralcircle })
+    }
+    this.setState({ temperaturestate: data + ' C' })
+  }
+
+  updateElecConsumption = (kwh) => {
+    this.setState({ energystate: kwh + ' kWh' })
+    this.setState({ energyElect: kwh + ' kWh' })
   }
 
   goToNextScreen = (buildingID, timeStart, timeStop, datapointArray, graphType) => {
@@ -195,42 +396,218 @@ export default class GenGraphScreen extends React.Component {
   }
 
   multiSliderValuesChange = (hours) => {
-    console.log('data changed: ' + hours);
     this.setState({ hourslider: hours })
+    this.getValuesFromNuuka();
   }
 
+  updateRooms = (rooms) => {
+    console.log('rooms ' + rooms);
+    this.setState({ rooms: rooms })
+  }
+
+  updateCO2dps = (validDataPointsCO2) => {
+    this.setState({ co2dp: validDataPointsCO2 })
+  }
+
+  /*
+  //Performing multiple concurrent requests
+  function getUserAccount() {
+    return axios.get('/user/12345');
+  }
+  function getUserPermissions() {
+    return axios.get('/user/12345/permissions');
+  }
+  axios.all([getUserAccount(), getUserPermissions()])
+    .then(axios.spread(function (acct, perms) {
+      // Both requests are now complete
+    }));*/
+
+
+  /* const p = new Promise(resovle => setTimeout(resovle));
+   new Promise(resolve => resolve(p)).then(() => {
+     console.log("tick 3");
+   });
+   p.then(() => {
+     console.log("tick 1");
+   }).then(() => {
+     console.log("tick 2");
+   });*/
   getValuesFromNuuka = () => {
-    console.log('accessing nuuka api');
+    console.log('accessing nuuka api for values');
     this.loading();
-    axios.get(nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS
-      + this.state.datapoint1 + this.state.datapoint2 + this.state.datapoint3
-      + startTimeStatic + this.state.dateStart + endTimeStatic + this.state.dateEnd
-      + timeStampZone + apitoken)
-      .then(datapoints => {
-        datapoints.data.forEach(function (point) {
-          datapointerinos.push(pointObj = {
+    const dates = startTimeStatic + this.state.dateStart + "%20" + this.state.hourslider[0] + ":00" + endTimeStatic + this.state.dateEnd + "%20" + this.state.hourslider[1] + ":00";
+    // const measurementDataIDsCO2 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.datapoint1 + this.state.datapoint2 + this.state.datapoint3 + dates + timeStampZone + apitoken //muuta datapointit ja nimi
+    const constumptionsByCategory = nuukaApi + getConsumptionsByCategory + this.state.buildingID + dates + energyTypeIDs + timeGrouping + apitoken;
+
+    const measurementDataIDsCO2 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.co2dp + dates + timeStampZone + apitoken;
+    const measurementDataIDsVOC = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.vocdp + dates + timeStampZone + apitoken;
+    const measurementDataIDsENERGY = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.energydp + dates + timeStampZone + apitoken;
+    const measurementDataIDsPM10 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.pm10dp + dates + timeStampZone + apitoken;
+    const measurementDataIDsTEMPERATURE = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.tempdp + dates + timeStampZone + apitoken;
+
+
+
+    //CO2 VALUE FETCHING
+    axios.get(measurementDataIDsCO2).then(datapoints => {
+      datapoints.data.forEach(function (point) {
+        if (point.Value !== 0) {
+          datapointerinosco2.push(pointObj = {
             cotwovaluerino: point.Value
           });
-          datapointerinosvalues = datapointerinosvalues + point.Value;
-        });
-        var co2value = datapointerinosvalues / datapointerinos.length;
-        co2value = co2value.toFixed(0);
-        this.changeCO2State(co2value);
-        console.log('changed state');
-        console.log('loading finished');
-        this.loadingdone();
-      })
+          datapointerinosvaluesco2 = datapointerinosvaluesco2 + point.Value;
+        }
+      });
+      var co2value = datapointerinosvaluesco2 / datapointerinosco2.length;
+      co2value = co2value.toFixed(0);
+      this.changeCO2State(co2value);
+      console.log("CO2value after update: " + co2value);
+    })
       .catch(function (error) {
         console.log(error);
         this.loadingdone();
-      })
+      });
+
+    //electricity
+    axios.get(measurementDataIDsENERGY).then(datapoints => {
+      datapoints.data.forEach(function (point) {
+        if (point.Value !== 0) {
+          datapointerinosenergy.push(pointObj = {
+            x: point.Value
+          });
+          datapointerinosvaluesenergy = datapointerinosvaluesenergy + point.Value;
+        }
+      });
+      var energyvalue = datapointerinosvaluesenergy / datapointerinosenergy.length;
+      energyvalue = energyvalue.toFixed(0);
+      this.changeENERGYstate(energyvalue);
+      console.log("energyvalue after update: " + energyvalue);
+    })
+      .catch(function (error) {
+        console.log(error);
+        this.loadingdone();
+      });
+
+    //temperature
+    axios.get(measurementDataIDsTEMPERATURE).then(datapoints => {
+      console.log('query ' + measurementDataIDsTEMPERATURE);
+      datapoints.data.forEach(function (point) {
+        if (point.Value !== 0) {
+          datapointerinostemperature.push(pointObj = {
+            x: point.Value
+          });
+          datapointerinosvaluestemperature = datapointerinosvaluestemperature + point.Value;
+        }
+      });
+      var temperaturevalue = datapointerinosvaluestemperature / datapointerinostemperature.length;
+      console.log('temperaturevalue after axios ' + temperaturevalue);
+      temperaturevalue = temperaturevalue.toFixed(1);
+      this.changeTEMPERATUREstate(temperaturevalue);
+    })
+      .catch(function (error) {
+        console.log(error);
+        this.loadingdone();
+      });
+
+    //PM10 VALUE FETCHING
+    axios.get(measurementDataIDsPM10).then(datapoints => {
+      datapoints.data.forEach(function (point) {
+        if (point.Value !== 0) {
+          datapointerinospm10.push(pointObj = {
+            x: point.Value
+          });
+          datapointerinosvaluespm10 = datapointerinosvaluespm10 + point.Value;
+        }
+      });
+      var pm10value = datapointerinosvaluespm10 / datapointerinospm10.length;
+      pm10value = pm10value.toFixed(2);
+      this.changePM10state(pm10value);
+      console.log("pm10value after update: " + pm10value);
+    })
+      .catch(function (error) {
+        console.log(error);
+        this.loadingdone();
+      });
+
+    //VOC VALUE FETCHING   
+    axios.get(measurementDataIDsVOC).then(datapoints => {
+      datapoints.data.forEach(function (point) {
+        if (point.Value !== 0) {
+          datapointerinosvoc.push(pointObj = {
+            x: point.Value
+          });
+          datapointerinosvaluesvoc = datapointerinosvaluesvoc + point.Value;
+        }
+      });
+      var vocvalue = datapointerinosvaluesvoc / datapointerinosvoc.length;
+      vocvalue = vocvalue / 1000;
+      vocvalue = vocvalue.toFixed(2);
+      this.changeVOCstate(vocvalue);
+      console.log("VOCvalue after update: " + vocvalue);
+      this.setState({ loading: 'false' })
+      this.loadingdone();
+    })
+      .catch(function (error) {
+        console.log(error);
+        this.loadingdone();
+      });
+
+
+
+    //hae ehkä energiakulutus toisesta endpointista
+    /*axios.get(constumptionsByCategory).then(datapoints => {
+      var elec = [];
+      var elecnumb = 0;
+      var heat = [];
+      var heatnumb = 0;
+      console.log('GET REQUEST: ' + constumptionsByCategory);
+      xml2js.parseString(datapoints.data, function (err, result) {
+        result.Result.NewDataSet.forEach(function (point) {
+          point.Table1.forEach(function (point) { //kato viel et matchaa numerot oikein ! et heat+elec on oikeist
+            console.log(point.Consumption[0]);
+            elec.push(pointObj = {
+              elecvalue: parseInt(point.Consumption[0])
+            });
+            elecnumb = elecnumb + parseInt(point.Consumption[0]); //parseInt(point.Consumption)
+          });
+        });
+        /* if (point.EnergyTypeID == 1) { //1 elecricity,  2 heating          //voi laskee yhteen mutta kato et kwh. eikä water kuutiometri tms..
+           elec.push(point.Consumption);
+           console.log('ADDED CONSUMPTION POINT: ' + point.Consumption);
+         }*/
+    //elecvalue = elecvalue.toFixed(0);
+    /*    console.log('elecnumb: ' + elecnumb);
+        console.log('elecvalue length: ' + elec.length);
+      });
+      console.log('accessed consumptionbycategory call!!');
+      var elecvalue = elecnumb / elec.length;
+      elecvalue = elecvalue.toFixed(0);
+      this.updateElecConsumption(elecvalue); //updates elec consumption average per day during selected time period. NOT total consumption!!
+    })
+      .catch(function (error) {
+        console.log(error);
+      });*/
+    // });
   }
 
-
+  /*  {this.state.showloading &&
+      <View>
+        <ActivityIndicator />
+      </View>
+    }*/
   render() {
-    var x = 0;
+
+    if (this.state.loading === 'initial') {
+      return <Text>Intializing... </Text>
+    }
+
+
+    if (this.state.loading === 'true') {
+      console.log('This happens 5th - when waiting for data.');
+      return <Text>Loading...  </Text>
+    }
+
     return (
-      <View style={styles.container}>
+      <View style={styles.container} >
 
         <DatePicker
           style={{ width: 150 }}
@@ -239,7 +616,7 @@ export default class GenGraphScreen extends React.Component {
           placeholder={this.state.dateStart}
           format="YYYY-MM-DD"
           minDate="2015-05-01"
-          maxDate="2025-06-01"
+          maxDate={this.state.dateToday}
           confirmBtnText="Confirm"
           cancelBtnText="Cancel"
           customStyles={{
@@ -262,16 +639,17 @@ export default class GenGraphScreen extends React.Component {
         {this.state.showloading &&
           <View>
             <ActivityIndicator />
-          </View>}
+          </View>
+        }
 
-        <DatePicker
+        < DatePicker
           style={{ width: 150 }}
           date={this.state.dateEnd}
           mode="date"
           placeholder={this.state.dateEnd}
           format="YYYY-MM-DD"
           minDate={this.state.dateStart}
-          maxDate="2025-06-01"
+          maxDate={this.state.dateToday}
           confirmBtnText="Confirm"
           cancelBtnText="Cancel"
           customStyles={{
@@ -288,39 +666,22 @@ export default class GenGraphScreen extends React.Component {
           onDateChange={(endTime) => {
             this.setState({ dateEnd: endTime })
             console.log('date changed ' + endTime);
-            this.loading();
             this.getValuesFromNuuka();
           }}
         />
-        <ScrollView style={styles.child}>
+        < ScrollView style={styles.child} >
 
           <View style={styles.picker}>
-            <Text>
-              <Text style={{ fontWeight: "bold" }}>Valitse huone</Text>
-            </Text>
-            <Picker
-              mode="dropdown"
-              selectedValue={(this.state && this.state.pickerValue) || ''}
-              onValueChange={(itemValue, itemIndex) => {
-                this.selectRoom(itemValue);
-              }}>
-              <Picker.Item label={""} value={""} />
-              <Picker.Item label={"Room 1"} value={"room1"} />
-              <Picker.Item label={"Room 2"} value={"room2"} />
-              <Picker.Item label={"Room 3"} value={"room3"} />
-              <Picker.Item label={"Room 4"} value={"room4"} />
-              <Picker.Item label={"Room 5"} value={"room5"} />
-              <Picker.Item label={"Room 6"} value={"room6"} />
-              <Picker.Item label={"Room 7"} value={"room7"} />
-              <Picker.Item label={"Room 8"} value={"room8"} />
-            </Picker>
+
+            <Text>Valitun ajanjakson keskiarvot.</Text>
+            <Text>RAKENNUKSEN NIMI</Text>
 
             <MultiSlider
               values={[this.state.hourslider[0], this.state.hourslider[1]]}
               sliderLength={144}
               onValuesChange={this.multiSliderValuesChange}
               min={0}
-              max={24}
+              max={23}
               step={1}
             />
             <Text style={styles.titlee}>Kellonaika:   {this.state.hourslider[0]}  -  {this.state.hourslider[1]}</Text>
@@ -350,7 +711,7 @@ export default class GenGraphScreen extends React.Component {
           </View>
 
 
-        </ScrollView>
+        </ScrollView >
 
 
         <ScrollView style={styles.childright}>
@@ -391,10 +752,28 @@ export default class GenGraphScreen extends React.Component {
           </View>
 
         </ScrollView>
-      </View>
+      </View >
     );
   }
 }
+
+/* piilotettu koska huonelistaus oli mahdoton saada oikein tämän hetken asetuksilla. valmis koodi jo olemassa.
+<Text>
+              <Text style={{ fontWeight: "bold" }}>Valitse huone</Text>
+            </Text>
+            <Picker
+              mode="dropdown"
+              selectedValue={(this.state && this.state.pickerValue) || ''}
+              onValueChange={(itemValue, itemIndex) => {
+                this.selectRoom(itemValue);
+              }}>
+              <Picker.Item label={""} value={""} />
+              {this.state.rooms.map((item, index) => {
+                return (<Picker.Item label={item} value={index} key={index} />)
+              })}
+
+            </Picker>*/
+
 
 const styles = StyleSheet.create({
   container: {
@@ -440,7 +819,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     borderRadius: 100,
     borderWidth: 1,
-    borderColor: '#fff',
+    borderColor: '#000000',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -455,6 +834,11 @@ const styles = StyleSheet.create({
   yellowcircle: {
     color: '#ffff00',
     backgroundColor: '#fff000',
+  },
+  neutralcircle: {
+    color: '#ffff',
+    backgroundColor: '#ffff',
+    borderColor: '#000000'
   },
   value: {
     fontWeight: 'bold',
