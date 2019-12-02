@@ -373,13 +373,17 @@ export default class GenGraphScreen extends React.Component {
     this.setState({ energyElect: kwh + ' kWh' })
   }
 
-  goToNextScreen = (buildingID, timeStart, timeStop, datapointArray, graphType) => {
-    console.log(buildingID, timeStart, timeStop, datapointArray, graphType);
+  goToNextScreen = (buildingID, timeStart, timeStop, datapointArray, graphType) => { //[this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp]
+    console.log(buildingID, timeStart, timeStop, datapointArray, graphType); //datapointArray[0], datapointArray[1], datapointArray[2], datapointArray[3], datapointArray[4],
     this.props.navigation.navigate('DetailedGraph', {
       buildingID: buildingID,
       timeStart: timeStart,
       timeStop: timeStop,
-      datapointArray: datapointArray,
+      co2dp: datapointArray[0],
+      vocdp: datapointArray[1],
+      pm10dp: datapointArray[2],
+      energydp: datapointArray[3],
+      temperaturedp: datapointArray[4],
       graphType: graphType
     })
   }
@@ -688,7 +692,7 @@ export default class GenGraphScreen extends React.Component {
           </View>
 
           <TouchableOpacity onPress={() => {
-            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[0].energy);
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp], titles.titles[0].energy);
           }} >
             <View style={[styles.circle, this.state.energycolor]}>
               <Text style={styles.value}> {this.state.energystate}</Text>
@@ -700,7 +704,7 @@ export default class GenGraphScreen extends React.Component {
 
 
           <TouchableOpacity onPress={() => {
-            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[1].temperature);
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp], titles.titles[1].temperature);
           }} >
             <View style={[styles.circle, this.state.temperaturecolor]}>
               <Text style={styles.value}>{this.state.temperaturestate}</Text>
@@ -717,7 +721,7 @@ export default class GenGraphScreen extends React.Component {
         <ScrollView style={styles.childright}>
 
           <TouchableOpacity onPress={() => {
-            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[3].co2);
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp], titles.titles[3].co2);
           }} >
             <View style={[styles.circle, this.state.co2color]}>
               <Text style={styles.value}>{this.state.co2state}</Text>
@@ -729,7 +733,7 @@ export default class GenGraphScreen extends React.Component {
 
 
           <TouchableOpacity onPress={() => {
-            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[4].pm10);
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp], titles.titles[4].pm10);
           }} >
             <View style={[styles.circle, this.state.pm10color]}>
               <Text style={styles.value}>{this.state.pm10state}</Text>
@@ -741,7 +745,7 @@ export default class GenGraphScreen extends React.Component {
 
 
           <TouchableOpacity onPress={() => {
-            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[5].voc);
+            this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp], titles.titles[5].voc);
           }} >
             <View style={[styles.circle, this.state.voccolor]}>
               <Text style={styles.value}>{this.state.vocstate} </Text>

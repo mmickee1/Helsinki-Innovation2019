@@ -8,18 +8,17 @@ export class ChartSelectorModal extends React.Component {
   }
 
   onCancel = () => {
-    console.log('sulkee');
     this.props.onClose();
   }
 
   selectChartType = (type) => {
-    console.log(`select ${type}`);
     this.props.onSelect(type);
     this.props.onClose();
   }
 
   render() {
     const chartTypes = [
+      'Energia',
       'Lämpötila',
       'CO2-hiukkaset',
       'Kosteus',
