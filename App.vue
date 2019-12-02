@@ -9,15 +9,13 @@ import {
   createDrawerNavigator
 } from "vue-native-router";
 import MapScreen from "./screens/MapScreen.vue";
-import GeneralGraphScreen from "./screens/GeneralGraphScreen.vue";
 import GenGraphScreen from "./screens/GenGraphScreen";
 import DetailedGraphScreen from "./screens/DetailedGraphScreen.vue";
 const DrawerNavigator = createDrawerNavigator(
   {
     Map: MapScreen,
-    GeneralGraph: GeneralGraphScreen,
-    DetailedGraph: DetailedGraphScreen,
-    Graph: GenGraphScreen
+    Graph: GenGraphScreen,
+    DetailedGraph: DetailedGraphScreen
   },
   {
     initialRouteName: "Map"
@@ -31,14 +29,11 @@ const StackNavigator = createStackNavigator(
     Map: {
       screen: MapScreen
     },
-    GeneralGraph: {
-      screen: GeneralGraphScreen
+    Graph: {
+      screen: GenGraphScreen
     },
     DetailedGraph: {
       screen: DetailedGraphScreen
-    },
-    Graph: {
-      screen: GenGraphScreen
     }
   },
   {
@@ -54,7 +49,7 @@ const StackNavigator = createStackNavigator(
         fontWeight: "bold",
         color: "#ffffff"
       },
-      headerTitle: "Helsinki -  Kysyntäjousto"
+      headerTitle: "ResDem"
     }
   }
 );
