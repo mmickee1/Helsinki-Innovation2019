@@ -64,12 +64,12 @@ export default {
   data: function() {
     return {
       chartTypes: [
-        {name: 'Energia', unit: 'kW/h', datapoint: 0, defaultScale: {min: 0, max: 150}},
-        {name: 'Lämpötila', unit: '°C', datapoint: '83556', defaultScale: {min: 20, max: 25}},
-        {name: "CO2", unit: 'ppm', datapoint: '83551', defaultScale: {min: 400, max: 1000}},
-        {name: 'Kosteus', unit: '%', datapoint: '83552', defaultScale: {min: 0, max: 100}},
-        {name: 'PM10', unit: 'μg/m3', datapoint: '83554', defaultScale: {min: 0, max: 10}},
-        {name: 'VOC', unit: 'ppb', datapoint: '83557', defaultScale: {min: 0, max: 1000}},
+        {key: "energy", name: 'Energia', unit: 'kW/h', datapoint: 0, defaultScale: {min: 0, max: 150}},
+        {key: "temp", name: 'Lämpötila', unit: '°C', datapoint: '83556', defaultScale: {min: 20, max: 25}},
+        {key: "co2", name: "CO2", unit: 'ppm', datapoint: '83551', defaultScale: {min: 400, max: 1000}},
+        {key: "moisture", name: 'Kosteus', unit: '%', datapoint: '83552', defaultScale: {min: 0, max: 100}},
+        {key: "pm10", name: 'PM10', unit: 'μg/m3', datapoint: '83554', defaultScale: {min: 0, max: 10}},
+        {key: "voc", name: 'VOC', unit: 'ppb', datapoint: '83557', defaultScale: {min: 0, max: 1000}},
       ],
 
       chartData: [],
@@ -86,6 +86,7 @@ export default {
       },
       apiToken: "L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU=",
       buildingAddress: "",
+      buildingID: 0,
       currentDate: new Date(),
       datePickerVisible: false,
       chartLoading: false,
@@ -99,8 +100,24 @@ export default {
       ],
     }
   },
+  props: {
+    navigation: {
+      type: Object
+    }
+  },
 
   async mounted() {
+
+    console.log('mounted');
+    console.log(this.navigation.state);
+
+    const params = this.navigation.state.params;
+
+    this.buildingID = params.buildingID;
+    this.currentDate = new Date(params.timeStart);
+
+    //console.log(this.buildingID);
+
     let leftType = 0;
     let rightType = 1;
     this.leftChartSelected = leftType;
@@ -119,8 +136,10 @@ export default {
     },
 
     async updateChart(date) {
-      const buildingInfo = await this.getBuildingInfo(4285);
+      //const buildingInfo = await this.getBuildingInfo(this.buildingID);
       //console.log(buildingInfo);
+
+    const buildingInfo = {buildingID: this.buildingID, buildingAddress: ""};
 
       //console.log(date);
       //console.log(`${date.getFullYear()}-${this.formatNumber(date.getMonth()+1)}-${this.formatNumber(date.getDate())}`);
