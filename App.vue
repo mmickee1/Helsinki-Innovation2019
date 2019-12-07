@@ -5,39 +5,49 @@
 <script>
 import {
   createAppContainer,
-  createStackNavigator,
-  createDrawerNavigator
+  createBottomTabNavigator,
+  createStackNavigator
 } from "vue-native-router";
-import MapScreen from "./screens/MapScreen.vue";
+import MapScreen from "./screens/MapScreen";
 import GenGraphScreen from "./screens/GenGraphScreen";
 import DetailedGraphScreen from "./screens/DetailedGraphScreen.vue";
-const DrawerNavigator = createDrawerNavigator(
+import React from 'react';
+import { MaterialCommunityIcons, Entypo, FontAwesome } from '@expo/vector-icons';
+
+const IOSTabs = createBottomTabNavigator(
   {
-    Map: MapScreen,
-    Graph: GenGraphScreen,
-    DetailedGraph: DetailedGraphScreen
-  },
-  {
-    initialRouteName: "Map"
+    Kartta: {
+      screen: MapScreen,
+      navigationOptions: ({ navigation }) => ({
+        tabBarIcon: ({ focused, tintColor }) => {
+          return <MaterialCommunityIcons name="map-search" size={32} color="#25D896" />;
+        },
+      })
+    },
+    Yleiskatsaus: {
+      screen: GenGraphScreen,
+      navigationOptions: ({ navigation }) => ({
+        tabBarIcon: ({ focused, tintColor }) => {
+          return <FontAwesome name="home" size={32} color="#25D896" />;
+        },
+      })
+    },
+    Kuvaaja: {
+      screen: DetailedGraphScreen,
+      navigationOptions: ({ navigation }) => ({
+        tabBarIcon: ({ focused, tintColor }) => {
+          return <Entypo name="area-graph" size={32} color="#25D896" />;
+        },
+      })
+    }
   }
 );
+
 const StackNavigator = createStackNavigator(
   {
-    Drawer: {
-      screen: DrawerNavigator
-    },
-    Map: {
-      screen: MapScreen
-    },
-    Graph: {
-      screen: GenGraphScreen
-    },
-    DetailedGraph: {
-      screen: DetailedGraphScreen
-    }
+    IOSTabs
   },
   {
-    //initialRouteName: "Map", //drawer ei toimi jos tää on annettu :D
     defaultNavigationOptions: {
       headerStyle: {
         backgroundColor: "#28F1A6",
@@ -53,8 +63,10 @@ const StackNavigator = createStackNavigator(
     }
   }
 );
+
 const AppNavigator = createAppContainer(StackNavigator);
+
 export default {
   components: { AppNavigator }
-};
+}
 </script>

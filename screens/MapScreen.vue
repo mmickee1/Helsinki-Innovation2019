@@ -1,17 +1,9 @@
 <template>
-  <view class="container">
-    <map-view class="container"
-    :initial-region="coordinates">
-     <map-marker v-for="place in places" :coordinate="place.coordinates" :title="place.name"></map-marker>
+<view class="container">
+  <map-view class="container" :initial-region="coordinates">
+    <map-marker v-for="place in places" :coordinate="place.coordinates" :title="place.name" />
   </map-view>
-    <!-- <button v-bind:title="messageDetailed" v-bind:on-press="goToDetailedGraphScreen"></button>
-    <button
-      :on-press="nextPage"
-      title="Access next page"
-      color="#841584"
-      accessibility-label="Next Page"
-    /> -->
-  </view>
+</view>
 </template>
 
 <script>
@@ -38,13 +30,13 @@ export default {
         latitudeDelta: 0.08,
         longitudeDelta: 0.0421
       },
-      messageDetailed: "Go to DetailedGraphScreen screen"
+      calloutHidden: true
     };
   },
   mounted() {
     let self = this;
     axios.get('https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetUserBuildings/?&$format=json&$token=' + this.apiToken)
-    .then(places => {
+      .then(places => {
         places.data.forEach(function(place) {
           if (place.ShowIndoorClimateConditions === true) {
             self.places.push(placeObj = {
@@ -56,15 +48,12 @@ export default {
             });
           }
         });
-    })
+      })
   },
   methods: {
-    nextPage() {
-      // alert('Hello');
-      this.navigation.navigate("GeneralGraph");
-    },
-    goToDetailedGraphScreen() {
-      this.navigation.navigate("DetailedGraph");
+    showCallout: function() {
+      this.calloutHidden = !this.calloutHidden;
+      console.log(this.calloutHidden);
     }
   }
 };
@@ -72,16 +61,12 @@ export default {
 
 <style>
 .container {
-  flex: 1;
-  padding: 30px;
+  flex: 1
 }
-.heading {
-  font-size: 30px;
-  font-weight: bold;
-  color: darkolivegreen;
-}
-.text {
-  text-align: center;
-  margin: 10px;
+
+.marker-callout {
+  height: 100px;
+  width: 100px;
+  display: none;
 }
 </style>
