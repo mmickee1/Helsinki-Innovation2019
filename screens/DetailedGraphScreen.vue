@@ -1,7 +1,7 @@
 <template>
   <view class="container">
     <text>{{buildingAddress}}</text>
-    <touchable-opacity :on-press="showDatePicker">
+    <touchable-opacity :on-press="showDatePicker" v-if="buildingSelected">
       <view class="date-select">
         <text class="date-select-text">
           {{makeTitleDate(currentDate)}}
@@ -10,7 +10,7 @@
     </touchable-opacity>
 
 
-    <view class="chart-type-title">
+    <view class="chart-type-title" v-if="buildingSelected">
       <touchable-opacity :on-press="showLeftChartSelector">
         <view class="chart-type-text">
           <text class="chart-type-text-left">{{chartConfig.leftDataTitle}}</text>
@@ -22,7 +22,7 @@
         </view>
       </touchable-opacity>
     </view>
-    <view class="chart-container">
+    <view class="chart-container" v-if="buildingSelected">
       <chart
         :data="chartData"
         :scale="chartScale"
@@ -64,7 +64,7 @@ export default {
   data: function() {
     return {
       chartTypes: [
-        {key: "energy", name: 'Energia', unit: 'kW/h', datapoint: 0, defaultScale: {min: 0, max: 150}},
+        {key: "energy", name: 'Energia', unit: 'kW/h', datapoint: 0, defaultScale: {min: 0, max: 200}},
         {key: "temp", name: 'Lämpötila', unit: '°C', datapoint: '83556', defaultScale: {min: 20, max: 25}},
         {key: "co2", name: "CO2", unit: 'ppm', datapoint: '83551', defaultScale: {min: 400, max: 1000}},
         {key: "moisture", name: 'Kosteus', unit: '%', datapoint: '83552', defaultScale: {min: 0, max: 100}},
@@ -94,6 +94,7 @@ export default {
       rightChartModalOpen: false,
       leftChartSelected: 0,
       rightChartSelected: 1,
+      buildingSelected: false,
 
       charHighlights: [
         {startColumn: 8, numColumns: 3, color: "orange", opacity: "0.4", title: "jousto"},
@@ -112,22 +113,42 @@ export default {
     console.log(this.navigation.state);
 
     const params = this.navigation.state.params;
+    if (params) {
+      this.buildingSelected = true;
+    
+    
+      const co2dps = params.co2dp.split(';');
+      const pm10dps = params.pm10dp.split(";");
+      const tempdps =  params.temperaturedp.split(";");
+      const vocdps = params.vocdp.split(";");
+    
 
-    this.buildingID = params.buildingID;
-    this.currentDate = new Date(params.timeStart);
+      this.buildingID = params.buildingID;
+      this.currentDate = new Date(params.timeStart);
 
-    //console.log(this.buildingID);
+      this.chartTypes[1].datapoint = tempdps[0];
+      this.chartTypes[2].datapoint = co2dps[0];
+      // moisture missing
+      this.chartTypes[4].datapoint = pm10dps[0];
+      this.chartTypes[5].datapoint = vocdps[0];
 
-    let leftType = 0;
-    let rightType = 1;
-    this.leftChartSelected = leftType;
-    this.chartConfig.leftDataTitle = this.chartTypes[leftType].name;
-    this.chartConfig.leftDataUnit = this.chartTypes[leftType].unit;
-    this.rightChartSelected = rightType;
-    this.chartConfig.rightDataTitle = this.chartTypes[rightType].name;
-    this.chartConfig.rightDataUnit = this.chartTypes[rightType].unit;
+      //console.log(this.buildingID);
 
-    await this.updateChart(this.currentDate, this.leftChartSelected, this.rightChartSelected);
+      let leftType = 0;
+      let rightType = 1;
+      this.leftChartSelected = leftType;
+      this.chartConfig.leftDataTitle = this.chartTypes[leftType].name;
+      this.chartConfig.leftDataUnit = this.chartTypes[leftType].unit;
+      this.rightChartSelected = rightType;
+      this.chartConfig.rightDataTitle = this.chartTypes[rightType].name;
+      this.chartConfig.rightDataUnit = this.chartTypes[rightType].unit;
+
+      await this.updateChart(this.currentDate, this.leftChartSelected, this.rightChartSelected);
+    }
+
+    if (!this.buildingSelected) {
+      this.buildingAddress = "Ei rakennusta valittuna";
+    }
   },
 
   methods: {
