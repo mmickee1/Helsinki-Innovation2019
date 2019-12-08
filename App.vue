@@ -11,37 +11,41 @@ import {
 import MapScreen from "./screens/MapScreen";
 import GenGraphScreen from "./screens/GenGraphScreen";
 import DetailedGraphScreen from "./screens/DetailedGraphScreen.vue";
-import React from 'react';
-import { MaterialCommunityIcons, Entypo, FontAwesome } from '@expo/vector-icons';
+import React from "react";
+import {
+  MaterialCommunityIcons,
+  Entypo,
+  FontAwesome
+} from "@expo/vector-icons";
 
-const IOSTabs = createBottomTabNavigator(
-  {
-    Kartta: {
-      screen: MapScreen,
-      navigationOptions: ({ navigation }) => ({
-        tabBarIcon: ({ focused, tintColor }) => {
-          return <MaterialCommunityIcons name="map-search" size={32} color="#25D896" />;
-        },
-      })
-    },
-    Yleiskatsaus: {
-      screen: GenGraphScreen,
-      navigationOptions: ({ navigation }) => ({
-        tabBarIcon: ({ focused, tintColor }) => {
-          return <FontAwesome name="list-alt" size={32} color="#25D896" />;
-        },
-      })
-    },
-    Kuvaaja: {
-      screen: DetailedGraphScreen,
-      navigationOptions: ({ navigation }) => ({
-        tabBarIcon: ({ focused, tintColor }) => {
-          return <Entypo name="area-graph" size={32} color="#25D896" />;
-        },
-      })
-    }
+const IOSTabs = createBottomTabNavigator({
+  Kartta: {
+    screen: MapScreen,
+    navigationOptions: ({ navigation }) => ({
+      tabBarIcon: ({ focused, tintColor }) => {
+        return (
+          <MaterialCommunityIcons name="map-search" size={32} color="#25D896" />
+        );
+      }
+    })
+  },
+  Yleiskatsaus: {
+    screen: GenGraphScreen,
+    navigationOptions: ({ navigation }) => ({
+      tabBarIcon: ({ focused, tintColor }) => {
+        return <FontAwesome name="list-alt" size={32} color="#25D896" />;
+      }
+    })
+  },
+  Kuvaaja: {
+    screen: DetailedGraphScreen,
+    navigationOptions: ({ navigation }) => ({
+      tabBarIcon: ({ focused, tintColor }) => {
+        return <Entypo name="area-graph" size={32} color="#25D896" />;
+      }
+    })
   }
-);
+});
 
 const StackNavigator = createStackNavigator(
   {
@@ -68,5 +72,5 @@ const AppNavigator = createAppContainer(StackNavigator);
 
 export default {
   components: { AppNavigator }
-}
+};
 </script>

@@ -131,8 +131,9 @@ this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.date
 export default class GenGraphScreen extends React.Component {
   constructor(props) {
     super(props);
-    console.log(props);
+    //console.log(props);
     //receive here id set as building id
+    //console.log('STATE PARAMS ' + props.navigation.state.params.buildingID + props.navigation.state.params.buildingName); //näkyy jos klikkaa kartalta tälle sivulle
     this.state = {
       loading: 'initial',
       co2state: 0, //ppm
@@ -149,14 +150,14 @@ export default class GenGraphScreen extends React.Component {
       voccolor: styles.greencircle,
       typecolor: styles.greencircle,
 
-      buildingID: 2410,
+      buildingID: 2410, //2410 else
       datapoint1: 83511 + ';',
       datapoint2: 83519 + ';',
       datapoint3: 83527 + ';',
       dateStart: '',  //has to be year-month-date
       dateEnd: '',
       dateToday: '',
-
+      currentBuilding: 'Kaisaniemen ala-aste', //_getBuildingName, //Kaisaniemen ala-aste
       showloading: false,
 
       pickerValue: '',
@@ -182,12 +183,28 @@ export default class GenGraphScreen extends React.Component {
     }
   }
 
+  getBuildingID() {
+    return this.props.navigation.state.params.buildingID || 2410
+  }
+
+  getBuildingName() {
+    return this.props.navigation.state.params.buildingName || 'Kaisaniemen Ala-Aste'
+  }
+
   componentWillMount() {
     console.log('component will mount');
     let that = this;
     var date = new Date().getDate(); //Current Date
     var month = new Date().getMonth() + 1; //Current Month
     var year = new Date().getFullYear(); //Current Year
+    console.log('BUILDING ID AFTER CXALL ' + that.getBuildingID());
+    that.setState({
+      buildingID: that.getBuildingID(),
+    });
+    console.log('BUILDING BNAME AFTER CXALL ' + that.getBuildingName());
+    that.setState({
+      currentBuilding: that.getBuildingName()
+    });
     that.setState({
       dateStart:
         year + '-' + month + '-' + date,
@@ -375,7 +392,7 @@ export default class GenGraphScreen extends React.Component {
 
   goToNextScreen = (buildingID, timeStart, timeStop, datapointArray, graphType) => { //[this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp]
     console.log(buildingID, timeStart, timeStop, datapointArray, graphType); //datapointArray[0], datapointArray[1], datapointArray[2], datapointArray[3], datapointArray[4],
-    this.props.navigation.navigate('DetailedGraph', {
+    this.props.navigation.navigate('Kuvaaja', {
       buildingID: buildingID,
       timeStart: timeStart,
       timeStop: timeStop,
@@ -677,8 +694,8 @@ export default class GenGraphScreen extends React.Component {
 
           <View style={styles.picker}>
 
+            <Text style={styles.value}>{this.state.currentBuilding}</Text>
             <Text>Valitun ajanjakson keskiarvot.</Text>
-            <Text>RAKENNUKSEN NIMI</Text>
 
             <MultiSlider
               values={[this.state.hourslider[0], this.state.hourslider[1]]}
