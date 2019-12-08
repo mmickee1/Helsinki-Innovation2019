@@ -28,7 +28,7 @@ const IOSTabs = createBottomTabNavigator(
       screen: GenGraphScreen,
       navigationOptions: ({ navigation }) => ({
         tabBarIcon: ({ focused, tintColor }) => {
-          return <FontAwesome name="home" size={32} color="#25D896" />;
+          return <FontAwesome name="list-alt" size={32} color="#25D896" />;
         },
       })
     },
