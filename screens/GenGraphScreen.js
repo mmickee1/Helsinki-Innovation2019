@@ -325,69 +325,93 @@ export default class GenGraphScreen extends React.Component {
     //0-750, 750-950, 950+
     if (data > 0 && data <= 750) {
       this.setState({ co2color: styles.greencircle })
+      this.setState({ co2state: data + ' ppm' })
     } else if (data > 750 && data <= 950) {
+      this.setState({ co2state: data + ' ppm' })
       this.setState({ co2color: styles.yellowcircle })
     } else if (data > 950) {
+      this.setState({ co2state: data + ' ppm' })
       this.setState({ co2color: styles.redcircle })
     } else {
+      this.setState({ co2state: 'Ei dataa' })
       this.setState({ co2color: styles.neutralcircle })
     }
-    this.setState({ co2state: data + ' ppm' })
   }
 
   changeVOCstate = (data) => {
     //voc 0-0.5 , 0.5-1, 1+   //ppm = (μg / m3)  / 1000
     if (data > 0 && data <= 0.5) {
       this.setState({ voccolor: styles.greencircle })
+      this.setState({ vocstate: data + ' μg / m3' })
     } else if (data > 0.5 && data <= 1) {
       this.setState({ voccolor: styles.yellowcircle })
+      this.setState({ vocstate: data + ' μg / m3' })
     } else if (data > 1) {
       this.setState({ voccolor: styles.redcircle })
+      this.setState({ vocstate: data + ' μg / m3' })
     } else {
       this.setState({ voccolor: styles.neutralcircle })
+      this.setState({ vocstate: 'Ei dataa' })
     }
-    this.setState({ vocstate: data + ' μg / m3' })
+    
   }
 
   changePM10state = (data) => {
     //pm10 0-10, 10-20, 20+
     if (data > 0 && data <= 10) {
       this.setState({ pm10color: styles.greencircle })
+      this.setState({ pm10state: data + ' μg / m3' })
     } else if (data > 10 && data <= 20) {
       this.setState({ pm10color: styles.yellowcircle })
+      this.setState({ pm10state: data + ' μg / m3' })
     } else if (data > 20) {
       this.setState({ pm10color: styles.redcircle })
+      this.setState({ pm10state: data + ' μg / m3' })
     } else {
       this.setState({ pm10color: styles.neutralcircle })
+      this.setState({ pm10state: 'Ei dataa' })
     }
-    this.setState({ pm10state: data + ' μg / m3' })
   }
 
   changeENERGYstate = (data) => {
     //energy not yet calculated per m2. Just showing raw data value in kWh.
     this.setState({ energycolor: styles.neutralcircle })
-    this.setState({ energystate: data + ' kWh' })
-    this.setState({ energyElect: data + ' kWh' })
+    if (data > 0) {
+      this.setState({ energystate: data + ' kWh' })
+      this.setState({ energyElect: data + ' kWh' })
+    } else {
+      this.setState({ energystate: 'Ei dataa' })
+      this.setState({ energyElect: 'Ei dataa' })
+    }
   }
 
   changeTEMPERATUREstate = (data) => {
     //lämpötila 21-23,  20-21/23-25, -20 25+
     console.log('average temperature: ' + data);
     if (data > 21 && data <= 23) {
+      this.setState({ temperaturestate: data + ' C' })
       this.setState({ temperaturecolor: styles.greencircle })
     } else if ((data > 20 || data <= 21) || (data > 23 || data <= 25)) {
+      this.setState({ temperaturestate: data + ' C' })
       this.setState({ temperaturecolor: styles.yellowcircle })
     } else if (data > 25 || data < 20) {
+      this.setState({ temperaturestate: data + ' C' })
       this.setState({ temperaturecolor: styles.redcircle })
     } else {
+      this.setState({ temperaturestate: 'Ei dataa' })
       this.setState({ temperaturecolor: styles.neutralcircle })
     }
-    this.setState({ temperaturestate: data + ' C' })
   }
 
   updateElecConsumption = (kwh) => {
-    this.setState({ energystate: kwh + ' kWh' })
-    this.setState({ energyElect: kwh + ' kWh' })
+    if (kwh > 0) {
+      this.setState({ energystate: kwh + ' kWh' })
+      this.setState({ energyElect: kwh + ' kWh' })
+    } else {
+      this.setState({ energystate: 'Ei dataa' })
+      this.setState({ energyElect: 'Ei dataa' })
+    }
+    
   }
 
   goToNextScreen = (buildingID, timeStart, timeStop, datapointArray, graphType) => { //[this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp]
@@ -695,7 +719,7 @@ export default class GenGraphScreen extends React.Component {
           <View style={styles.picker}>
 
             <Text style={styles.value}>{this.state.currentBuilding}</Text>
-            <Text>Valitun ajanjakson keskiarvot.</Text>
+            <Text>Näytetään valitun ajanjakson keskiarvot</Text>
 
             <MultiSlider
               values={[this.state.hourslider[0], this.state.hourslider[1]]}
