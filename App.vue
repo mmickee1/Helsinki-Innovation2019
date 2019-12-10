@@ -10,7 +10,7 @@ import {
 } from "vue-native-router";
 import MapScreen from "./screens/MapScreen";
 import GenGraphScreen from "./screens/GenGraphScreen";
-import DetailedGraphScreen from "./screens/DetailedGraphScreen.vue";
+import DetailedGraphScreen from "./screens/DetailedGraphScreen";
 import React from "react";
 import {
   MaterialCommunityIcons,
