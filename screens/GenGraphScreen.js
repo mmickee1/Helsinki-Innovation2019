@@ -157,7 +157,7 @@ export default class GenGraphScreen extends React.Component {
       dateStart: '',  //has to be year-month-date
       dateEnd: '',
       dateToday: '',
-      currentBuilding: 'Kaisaniemen ala-aste', //_getBuildingName, //Kaisaniemen ala-aste
+      currentBuilding: 'Kaisaniemen ala-aste', //getBuildingName, //Default value
       showloading: false,
 
       pickerValue: '',
@@ -184,11 +184,21 @@ export default class GenGraphScreen extends React.Component {
   }
 
   getBuildingID() {
-    return this.props.navigation.state.params.buildingID || 2410
+    if (this.props.navigation.state.params) {
+      return this.props.navigation.state.params.buildingID
+    } else {
+      //return this.state.buildingID
+      return 2410
+    }
   }
 
   getBuildingName() {
-    return this.props.navigation.state.params.buildingName || 'Kaisaniemen Ala-Aste'
+    if (this.props.navigation.state.params) {
+      return this.props.navigation.state.params.buildingName
+    } else {
+      //return this.state.currentBuilding
+      return 'Kaisaniemen ala-aste'
+    }
   }
 
   componentWillMount() {
@@ -199,7 +209,7 @@ export default class GenGraphScreen extends React.Component {
     var year = new Date().getFullYear(); //Current Year
     console.log('BUILDING ID AFTER CXALL ' + that.getBuildingID());
     that.setState({
-      buildingID: that.getBuildingID(),
+      buildingID: that.getBuildingID()
     });
     console.log('BUILDING BNAME AFTER CXALL ' + that.getBuildingName());
     that.setState({
@@ -220,7 +230,47 @@ export default class GenGraphScreen extends React.Component {
     that.setState({
       loading: 'true'
     });
-    // that.prefixvalues();
+  }
+
+  /*static getDerivedStateFromProps(nextProps, prevState) {
+    console.log(nextProps);
+    console.log(prevState);
+    if (nextProps.navigation.state.params.buildingID !== prevState.buildingID) {
+      console.log('it was different boiiii!'+ nextProps.navigation.state.params.buildingID + nextProps.buildingID)
+      // return {
+     // that.setState({
+       return {
+        currentBuilding: nextProps.navigation.state.params.buildingName,
+        buildingID: nextProps.navigation.state.params.buildingID
+       }
+     // });
+      // }
+    }
+    //this.checkPrefix();
+  }*/
+
+  componentDidUpdate(nextProps, prevState, snapshot) {
+    
+    //console.log(nextProps);
+    //console.log(prevState);
+    if (nextProps.navigation.state.params.buildingID !== prevState.buildingID) {
+
+     // console.log('it was different boiiii!' + nextProps.navigation.state.params.buildingID + nextProps.navigation.state.params.buildingID)
+      // return {
+      // that.setState({
+      //  return {
+      this.setState({
+        currentBuilding: nextProps.navigation.state.params.buildingName,
+        buildingID: nextProps.navigation.state.params.buildingID
+      })
+      console.log('these should match' + this.state.buildingID + '=' + nextProps.navigation.state.params.buildingID)
+      //this.checkPrefix();
+      setTimeout( () => {
+        this.checkPrefix();
+     },2000);
+      // });
+      // }
+    }
   }
 
 
@@ -353,7 +403,6 @@ export default class GenGraphScreen extends React.Component {
       this.setState({ voccolor: styles.neutralcircle })
       this.setState({ vocstate: 'Ei dataa' })
     }
-    
   }
 
   changePM10state = (data) => {
@@ -411,7 +460,6 @@ export default class GenGraphScreen extends React.Component {
       this.setState({ energystate: 'Ei dataa' })
       this.setState({ energyElect: 'Ei dataa' })
     }
-    
   }
 
   goToNextScreen = (buildingID, timeStart, timeStop, datapointArray, graphType) => { //[this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp]
@@ -454,41 +502,18 @@ export default class GenGraphScreen extends React.Component {
     this.setState({ co2dp: validDataPointsCO2 })
   }
 
-  /*
-  //Performing multiple concurrent requests
-  function getUserAccount() {
-    return axios.get('/user/12345');
-  }
-  function getUserPermissions() {
-    return axios.get('/user/12345/permissions');
-  }
-  axios.all([getUserAccount(), getUserPermissions()])
-    .then(axios.spread(function (acct, perms) {
-      // Both requests are now complete
-    }));*/
-
-
-  /* const p = new Promise(resovle => setTimeout(resovle));
-   new Promise(resolve => resolve(p)).then(() => {
-     console.log("tick 3");
-   });
-   p.then(() => {
-     console.log("tick 1");
-   }).then(() => {
-     console.log("tick 2");
-   });*/
   getValuesFromNuuka = () => {
     console.log('accessing nuuka api for values');
     this.loading();
-    const dates = startTimeStatic + this.state.dateStart + "%20" + this.state.hourslider[0] + ":00" + endTimeStatic + this.state.dateEnd + "%20" + this.state.hourslider[1] + ":00";
-    // const measurementDataIDsCO2 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.datapoint1 + this.state.datapoint2 + this.state.datapoint3 + dates + timeStampZone + apitoken //muuta datapointit ja nimi
-    const constumptionsByCategory = nuukaApi + getConsumptionsByCategory + this.state.buildingID + dates + energyTypeIDs + timeGrouping + apitoken;
+    var dates = startTimeStatic + this.state.dateStart + "%20" + this.state.hourslider[0] + ":00" + endTimeStatic + this.state.dateEnd + "%20" + this.state.hourslider[1] + ":00";
+    // var measurementDataIDsCO2 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.datapoint1 + this.state.datapoint2 + this.state.datapoint3 + dates + timeStampZone + apitoken //muuta datapointit ja nimi
+    var constumptionsByCategory = nuukaApi + getConsumptionsByCategory + this.state.buildingID + dates + energyTypeIDs + timeGrouping + apitoken;
 
-    const measurementDataIDsCO2 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.co2dp + dates + timeStampZone + apitoken;
-    const measurementDataIDsVOC = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.vocdp + dates + timeStampZone + apitoken;
-    const measurementDataIDsENERGY = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.energydp + dates + timeStampZone + apitoken;
-    const measurementDataIDsPM10 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.pm10dp + dates + timeStampZone + apitoken;
-    const measurementDataIDsTEMPERATURE = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.tempdp + dates + timeStampZone + apitoken;
+    var measurementDataIDsCO2 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.co2dp + dates + timeStampZone + apitoken;
+    var measurementDataIDsVOC = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.vocdp + dates + timeStampZone + apitoken;
+    var measurementDataIDsENERGY = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.energydp + dates + timeStampZone + apitoken;
+    var measurementDataIDsPM10 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.pm10dp + dates + timeStampZone + apitoken;
+    var measurementDataIDsTEMPERATURE = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.tempdp + dates + timeStampZone + apitoken;
 
 
 
