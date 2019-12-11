@@ -230,15 +230,17 @@ export default class GenGraphScreen extends React.Component {
     }
   }*/
 
-  componentDidUpdate(nextProps, prevState, snapshot) {
-    if (nextProps.navigation.state.params.buildingID !== prevState.buildingID) {
-      this.setState({
-        currentBuilding: nextProps.navigation.state.params.buildingName,
-        buildingID: nextProps.navigation.state.params.buildingID
-      }, function () {
-        console.log('state changed successfully: ' + this.state.buildingID);
-        this.prefixvalues();
-      })
+  componentWillUpdate(nextProps, prevState, snapshot) {
+    if (nextProps.navigation.state.params) {
+      if (nextProps.navigation.state.params.buildingID !== prevState.buildingID) {
+        this.setState({
+          currentBuilding: nextProps.navigation.state.params.buildingName,
+          buildingID: nextProps.navigation.state.params.buildingID,
+        }, function () {
+          console.log('state changed successfully: ' + this.state.buildingID);
+          this.prefixvalues();
+        })
+      }
     }
   }
 
@@ -681,7 +683,7 @@ export default class GenGraphScreen extends React.Component {
           }}
           onDateChange={(startTime) => {
             this.setState({ dateStart: startTime })
-            console.log('date changed ' + startTime);
+            //console.log('date changed ' + startTime);
             this.getValuesFromNuuka();
           }}
         />
@@ -714,7 +716,7 @@ export default class GenGraphScreen extends React.Component {
           }}
           onDateChange={(endTime) => {
             this.setState({ dateEnd: endTime })
-            console.log('date changed ' + endTime);
+            //console.log('date changed ' + endTime);
             this.getValuesFromNuuka();
           }}
         />
