@@ -660,83 +660,89 @@ export default class GenGraphScreen extends React.Component {
     return (
       <View style={styles.container} >
 
-        <DatePicker
-          style={{ width: 150 }}
-          date={this.state.dateStart}
-          mode="date"
-          placeholder={this.state.dateStart}
-          format="YYYY-MM-DD"
-          minDate="2015-05-01"
-          maxDate={this.state.dateToday}
-          confirmBtnText="Confirm"
-          cancelBtnText="Cancel"
-          customStyles={{
-            dateIcon: {
-              position: 'absolute',
-              left: 0,
-              top: 4,
-              marginLeft: 0
-            },
-            dateInput: {
-              marginLeft: 36
-            }
-          }}
-          onDateChange={(startTime) => {
-            this.setState({ dateStart: startTime })
-            //console.log('date changed ' + startTime);
-            this.getValuesFromNuuka();
-          }}
-        />
-        {this.state.showloading &&
-          <View>
-            <ActivityIndicator />
-          </View>
-        }
 
-        < DatePicker
-          style={{ width: 150 }}
-          date={this.state.dateEnd}
-          mode="date"
-          placeholder={this.state.dateEnd}
-          format="YYYY-MM-DD"
-          minDate={this.state.dateStart}
-          maxDate={this.state.dateToday}
-          confirmBtnText="Confirm"
-          cancelBtnText="Cancel"
-          customStyles={{
-            dateIcon: {
-              position: 'absolute',
-              left: 0,
-              top: 4,
-              marginLeft: 0
-            },
-            dateInput: {
-              marginLeft: 36
-            }
-          }}
-          onDateChange={(endTime) => {
-            this.setState({ dateEnd: endTime })
-            //console.log('date changed ' + endTime);
-            this.getValuesFromNuuka();
-          }}
-        />
-        < ScrollView style={styles.child} >
+        <View style={styles.containerstatictop}>
+          <DatePicker
+            style={{ width: 150 }}
+            date={this.state.dateStart}
+            mode="date"
+            placeholder={this.state.dateStart}
+            format="YYYY-MM-DD"
+            minDate="2015-05-01"
+            maxDate={this.state.dateToday}
+            confirmBtnText="Confirm"
+            cancelBtnText="Cancel"
+            customStyles={{
+              dateIcon: {
+                position: 'absolute',
+                left: 0,
+                top: 4,
+                marginLeft: 0
+              },
+              dateInput: {
+                marginLeft: 36
+              }
+            }}
+            onDateChange={(startTime) => {
+              this.setState({ dateStart: startTime })
+              //console.log('date changed ' + startTime);
+              this.getValuesFromNuuka();
+            }}
+          />
+          {this.state.showloading &&
+            <View>
+              <ActivityIndicator />
+            </View>
+          }
 
-          <View style={styles.picker}>
+          < DatePicker
+            style={{ width: 150 }}
+            date={this.state.dateEnd}
+            mode="date"
+            placeholder={this.state.dateEnd}
+            format="YYYY-MM-DD"
+            minDate={this.state.dateStart}
+            maxDate={this.state.dateToday}
+            confirmBtnText="Confirm"
+            cancelBtnText="Cancel"
+            customStyles={{
+              dateIcon: {
+                position: 'absolute',
+                left: 0,
+                top: 4,
+                marginLeft: 0
+              },
+              dateInput: {
+                marginLeft: 36
+              }
+            }}
+            onDateChange={(endTime) => {
+              this.setState({ dateEnd: endTime })
+              //console.log('date changed ' + endTime);
+              this.getValuesFromNuuka();
+            }}
+          />
+        </View>
 
-            <Text style={styles.value}>{this.state.currentBuilding}</Text>
-            <Text>Näytetään valitun ajanjakson keskiarvot</Text>
+        <View style={styles.staticinfo}>
+          <Text style={styles.valuename}>{this.state.currentBuilding}</Text>
+          <Text style={styles.helptext}>Näytetään valitun ajanjakson keskiarvot</Text>
+          <MultiSlider
+            values={[this.state.hourslider[0], this.state.hourslider[1]]}
+            //sliderLength={240}
+            onValuesChange={this.multiSliderValuesChange}
+            //touchDimensions={height = 50, width = 50, borderRadius = 15, slipDisplacement = 200}
+            min={0}
+            max={23}
+            step={1}
+          />
+          <Text style={styles.titletimer}>Kellonaika:   {this.state.hourslider[0]}  -  {this.state.hourslider[1]}</Text>
+        </View>
 
-            <MultiSlider
-              values={[this.state.hourslider[0], this.state.hourslider[1]]}
-              sliderLength={144}
-              onValuesChange={this.multiSliderValuesChange}
-              min={0}
-              max={23}
-              step={1}
-            />
-            <Text style={styles.titlee}>Kellonaika:   {this.state.hourslider[0]}  -  {this.state.hourslider[1]}</Text>
-          </View>
+
+
+
+        <ScrollView style={styles.child}>
 
           <TouchableOpacity onPress={() => {
             this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp], titles.titles[0].energy);
@@ -762,10 +768,11 @@ export default class GenGraphScreen extends React.Component {
           </View>
 
 
-        </ScrollView >
 
 
-        <ScrollView style={styles.childright}>
+
+
+
 
           <TouchableOpacity onPress={() => {
             this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp], titles.titles[3].co2);
@@ -791,6 +798,9 @@ export default class GenGraphScreen extends React.Component {
           </View>
 
 
+
+
+
           <TouchableOpacity onPress={() => {
             this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp], titles.titles[5].voc);
           }} >
@@ -802,8 +812,9 @@ export default class GenGraphScreen extends React.Component {
             <Text style={styles.title}>{titles.titles[5].voc}</Text>
           </View>
 
-        </ScrollView>
+        </ScrollView >
       </View >
+
     );
   }
 }
@@ -828,31 +839,36 @@ export default class GenGraphScreen extends React.Component {
 
 const styles = StyleSheet.create({
   container: {
+   /* flex: 1,
+    flexWrap: 'wrap',
+    flexDirection: 'column',
+    justifyContent: 'space-evenly', */
+    //paddingTop: 16,
+    //padding: 6,
+    marginHorizontal: 16,
+    padding: 4,
+    marginVertical: 4,
+    // marginTop: 8,
+    //marginHorizontal: 8,
+    height: '100%'
+  },
+  containerstatictop: {
     flex: 1,
     flexWrap: 'wrap',
     flexDirection: 'row',
     justifyContent: 'space-evenly',
-    marginTop: 8,
-    marginHorizontal: 8,
   },
   child: {
-    flexBasis: '50%',
-    width: '50%',
-    justifyContent: 'center',
-    alignSelf: 'center',
+    //justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 100,
-    paddingBottom: 100,
+    //textAlign: 'center',
 
-  },
-  childright: {
-    flexBasis: '50%',
-    width: '50%',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    alignItems: 'center',
-    paddingTop: 100,
-    paddingBottom: 100,
+    //flex: 1,
+    //flexWrap: 'wrap',
+    //flexDirection: 'column',
+    //justifyContent: 'space-evenly', //space-evenly -nyt ok mutta ruudun oikeassa laidassa ulkona näkymästä :D
+
+
   },
   header: {
     fontSize: 32,
@@ -860,7 +876,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     justifyContent: 'center',
-    alignSelf: 'center',
+    //alignSelf: 'center',
     alignItems: 'center',
     paddingBottom: 16,
   },
@@ -895,6 +911,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 24
   },
+  valuename: {
+    fontWeight: 'bold',
+    fontSize: 36,
+    paddingTop: 10,
+    marginTop: 20,
+  },
   loaderstyle: {
     position: 'absolute',
     left: 0,
@@ -908,5 +930,20 @@ const styles = StyleSheet.create({
     width: 150,
     marginTop: 30,
     marginBottom: 30,
+  },
+  staticinfo: {
+    textAlign: 'center',
+    justifyContent: 'center'
+  },
+  titletimer: {
+    fontSize: 24,
+    justifyContent: 'center',
+    textAlign: 'center',
+    alignItems: 'center'
+  },
+  helptext: {
+    justifyContent: 'center',
+    textAlign: 'center',
+    alignItems: 'center',
   }
 });
