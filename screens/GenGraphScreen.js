@@ -25,11 +25,11 @@ const titles = {
     }, {
       type: 'Tyyppi'
     }, {
-      co2: 'CO2-Hiukkaset'
+      co2: 'CO2-Pitoisuus'
     }, {
-      pm10: 'PM10-Hiukkaset'
+      pm10: 'PM10-Pitoisuus'
     }, {
-      voc: 'VOC-hiukkaset'
+      voc: 'VOC-Pitoisuus'
     }, {
       all: 'All Graphs'
     }
@@ -47,31 +47,25 @@ const startTimeStatic = '&StartTime='
 const endTimeStatic = '&EndTime='
 const timeStampZone = '&TimestampTimeZone=UTCOffset&MeasurementSystem=SI&$format=json&$token='
 var datapointerinosco2 = [];
-let datapointerinosvaluesco2 = 0;
+var datapointerinosvaluesco2 = 0;
 
 var datapointerinosvoc = [];
-let datapointerinosvaluesvoc = 0;
+var datapointerinosvaluesvoc = 0;
 
 var datapointerinospm10 = [];
-let datapointerinosvaluespm10 = 0;
+var datapointerinosvaluespm10 = 0;
 
 var datapointerinosenergy = [];
-let datapointerinosvaluesenergy = 0;
+var datapointerinosvaluesenergy = 0;
 
 var datapointerinostemperature = [];
-let datapointerinosvaluestemperature = 0;
+var datapointerinosvaluestemperature = 0;
 
 
 const getConsumptionsByCategory = 'GetConsumptionsByCategory/?Building='
 const energyTypeIDs = '&EnergyTypeIDs=1,2' //1 for elecricity and 2 for heating => total consumption
 const timeGrouping = '&TimeGrouping=hour&ShowMetaData=false&MeasurementSystem=SI&$format=xml&$token='
 
-
-
-//esimerkki co2 arvojen saamisesta
-//https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetMeasurementDataByIDs/?&Building=2410&DataPointIDs=83511;83519;83527&StartTime=2019-08-01&EndTime=2019-08-30&TimestampTimeZone=UTCOffset&MeasurementSystem=SI&$format=json&$token=L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU=
-
-//working startTime: 2019 elokuu. eli 2019-08-1   ja 2019-08-1
 
 /*
 CO2 levels from https://www.kane.co.uk/knowledge-centre/what-are-safe-levels-of-co-and-co2-in-rooms
@@ -116,18 +110,6 @@ Less than 0.3 mg/m3	   Low
 0.5 to 1 mg/m3	   Marginal
 1 to 3 mg/m3	   High*/
 
-/*
-          <TouchableOpacity onPress={() => {
-this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[2].type);
-}} >
-<View style={[styles.circle, this.state.typecolor]}>
-<Text style={styles.value}>{this.state.typestate}</Text>
-</View>
-</TouchableOpacity>
-<View>
-<Text style={styles.title}>{titles.titles[2].type}</Text>
-</View>*/
-
 export default class GenGraphScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -157,7 +139,7 @@ export default class GenGraphScreen extends React.Component {
       dateStart: '',  //has to be year-month-date
       dateEnd: '',
       dateToday: '',
-      currentBuilding: 'Kaisaniemen ala-aste', //_getBuildingName, //Kaisaniemen ala-aste
+      currentBuilding: 'Kaisaniemen ala-aste', //getBuildingName, //Default value
       showloading: false,
 
       pickerValue: '',
@@ -184,11 +166,21 @@ export default class GenGraphScreen extends React.Component {
   }
 
   getBuildingID() {
-    return this.props.navigation.state.params.buildingID || 2410
+    if (this.props.navigation.state.params) {
+      return this.props.navigation.state.params.buildingID
+    } else {
+      //return this.state.buildingID
+      return 2410
+    }
   }
 
   getBuildingName() {
-    return this.props.navigation.state.params.buildingName || 'Kaisaniemen Ala-Aste'
+    if (this.props.navigation.state.params) {
+      return this.props.navigation.state.params.buildingName
+    } else {
+      //return this.state.currentBuilding
+      return 'Kaisaniemen ala-aste'
+    }
   }
 
   componentWillMount() {
@@ -199,7 +191,7 @@ export default class GenGraphScreen extends React.Component {
     var year = new Date().getFullYear(); //Current Year
     console.log('BUILDING ID AFTER CXALL ' + that.getBuildingID());
     that.setState({
-      buildingID: that.getBuildingID(),
+      buildingID: that.getBuildingID()
     });
     console.log('BUILDING BNAME AFTER CXALL ' + that.getBuildingName());
     that.setState({
@@ -220,7 +212,34 @@ export default class GenGraphScreen extends React.Component {
     that.setState({
       loading: 'true'
     });
-    // that.prefixvalues();
+  }
+
+  /*static getDerivedStateFromProps(nextProps, prevState) {
+    console.log(nextProps);
+    console.log(prevState);
+    if (nextProps.navigation.state.params.buildingID !== prevState.buildingID) {
+      console.log('it was different boiiii!'+ nextProps.navigation.state.params.buildingID + nextProps.buildingID)
+      // return {
+     // that.setState({
+       return {
+        currentBuilding: nextProps.navigation.state.params.buildingName,
+        buildingID: nextProps.navigation.state.params.buildingID
+       }
+     // });
+      // }
+    }
+  }*/
+
+  componentDidUpdate(nextProps, prevState, snapshot) {
+    if (nextProps.navigation.state.params.buildingID !== prevState.buildingID) {
+      this.setState({
+        currentBuilding: nextProps.navigation.state.params.buildingName,
+        buildingID: nextProps.navigation.state.params.buildingID
+      }, function () {
+        console.log('state changed successfully: ' + this.state.buildingID);
+        this.prefixvalues();
+      })
+    }
   }
 
 
@@ -245,7 +264,7 @@ export default class GenGraphScreen extends React.Component {
       var validDataPointsTemperature = '';
       var temp2dpcalculator = 0;
 
-      for (let point of datapoints.data) {
+      for (var point of datapoints.data) {
         if (point.Category === 'indoor conditions: co2') {
           if (co2dpcalculator === 10) {
             break;
@@ -253,11 +272,11 @@ export default class GenGraphScreen extends React.Component {
           roomList.push(point.Name);
           validDataPointsCO2 = validDataPointsCO2 + point.DataPointID + ';';
           co2dpcalculator += 1;
-          console.log('co2dpcalculator size: ' + co2dpcalculator);
+          //console.log('co2dpcalculator size: ' + co2dpcalculator);
         }
       }
 
-      for (let point of datapoints.data) {
+      for (var point of datapoints.data) {
         if (point.Category === 'indoor conditions: tvoc (ppb)') {
           if (vocdpcalculator === 10) {
             break;
@@ -267,7 +286,7 @@ export default class GenGraphScreen extends React.Component {
         }
       }
 
-      for (let point of datapoints.data) {
+      for (var point of datapoints.data) {
         if (point.Category === 'indoor conditions: pm10 (uq/m3)') {
           if (pm10dpcalculator === 10) {
             break;
@@ -277,7 +296,7 @@ export default class GenGraphScreen extends React.Component {
         }
       }
 
-      for (let point of datapoints.data) {
+      for (var point of datapoints.data) {
         if (point.Category === 'electricity') {  //heating is in MWh , change it first , then add this to if statement /* || point.Category === 'heating'*/
           if (energydpcalculator === 10) {
             break;
@@ -287,14 +306,14 @@ export default class GenGraphScreen extends React.Component {
         }
       }
 
-      for (let point of datapoints.data) {
+      for (var point of datapoints.data) {
         if (point.Category === 'indoor conditions: temperature') {
           if (temp2dpcalculator === 10) {
             break;
           }
           validDataPointsTemperature = validDataPointsTemperature + point.DataPointID + ';';
           temp2dpcalculator += 1;
-          console.log('temperaturedpcalculator size: ' + temp2dpcalculator);
+          //console.log('temperaturedpcalculator size: ' + temp2dpcalculator);
         }
       }
 
@@ -313,11 +332,6 @@ export default class GenGraphScreen extends React.Component {
 
   componentDidMount() {
     console.log('component did mount');
-    this.checkPrefix();
-    //this.getValuesFromNuuka();
-  }
-
-  checkPrefix() {
     this.prefixvalues();
   }
 
@@ -325,69 +339,91 @@ export default class GenGraphScreen extends React.Component {
     //0-750, 750-950, 950+
     if (data > 0 && data <= 750) {
       this.setState({ co2color: styles.greencircle })
+      this.setState({ co2state: data + ' ppm' })
     } else if (data > 750 && data <= 950) {
+      this.setState({ co2state: data + ' ppm' })
       this.setState({ co2color: styles.yellowcircle })
     } else if (data > 950) {
+      this.setState({ co2state: data + ' ppm' })
       this.setState({ co2color: styles.redcircle })
     } else {
+      this.setState({ co2state: 'Ei dataa' })
       this.setState({ co2color: styles.neutralcircle })
     }
-    this.setState({ co2state: data + ' ppm' })
   }
 
   changeVOCstate = (data) => {
     //voc 0-0.5 , 0.5-1, 1+   //ppm = (μg / m3)  / 1000
     if (data > 0 && data <= 0.5) {
       this.setState({ voccolor: styles.greencircle })
+      this.setState({ vocstate: data + ' μg / m3' })
     } else if (data > 0.5 && data <= 1) {
       this.setState({ voccolor: styles.yellowcircle })
+      this.setState({ vocstate: data + ' μg / m3' })
     } else if (data > 1) {
       this.setState({ voccolor: styles.redcircle })
+      this.setState({ vocstate: data + ' μg / m3' })
     } else {
       this.setState({ voccolor: styles.neutralcircle })
+      this.setState({ vocstate: 'Ei dataa' })
     }
-    this.setState({ vocstate: data + ' μg / m3' })
   }
 
   changePM10state = (data) => {
     //pm10 0-10, 10-20, 20+
     if (data > 0 && data <= 10) {
       this.setState({ pm10color: styles.greencircle })
+      this.setState({ pm10state: data + ' μg / m3' })
     } else if (data > 10 && data <= 20) {
       this.setState({ pm10color: styles.yellowcircle })
+      this.setState({ pm10state: data + ' μg / m3' })
     } else if (data > 20) {
       this.setState({ pm10color: styles.redcircle })
+      this.setState({ pm10state: data + ' μg / m3' })
     } else {
       this.setState({ pm10color: styles.neutralcircle })
+      this.setState({ pm10state: 'Ei dataa' })
     }
-    this.setState({ pm10state: data + ' μg / m3' })
   }
 
   changeENERGYstate = (data) => {
     //energy not yet calculated per m2. Just showing raw data value in kWh.
     this.setState({ energycolor: styles.neutralcircle })
-    this.setState({ energystate: data + ' kWh' })
-    this.setState({ energyElect: data + ' kWh' })
+    if (data > 0) {
+      this.setState({ energystate: data + ' kWh' })
+      this.setState({ energyElect: data + ' kWh' })
+    } else {
+      this.setState({ energystate: 'Ei dataa' })
+      this.setState({ energyElect: 'Ei dataa' })
+    }
   }
 
   changeTEMPERATUREstate = (data) => {
     //lämpötila 21-23,  20-21/23-25, -20 25+
     console.log('average temperature: ' + data);
     if (data > 21 && data <= 23) {
+      this.setState({ temperaturestate: data + ' C' })
       this.setState({ temperaturecolor: styles.greencircle })
     } else if ((data > 20 || data <= 21) || (data > 23 || data <= 25)) {
+      this.setState({ temperaturestate: data + ' C' })
       this.setState({ temperaturecolor: styles.yellowcircle })
     } else if (data > 25 || data < 20) {
+      this.setState({ temperaturestate: data + ' C' })
       this.setState({ temperaturecolor: styles.redcircle })
     } else {
+      this.setState({ temperaturestate: 'Ei dataa' })
       this.setState({ temperaturecolor: styles.neutralcircle })
     }
-    this.setState({ temperaturestate: data + ' C' })
   }
 
   updateElecConsumption = (kwh) => {
-    this.setState({ energystate: kwh + ' kWh' })
-    this.setState({ energyElect: kwh + ' kWh' })
+    if (kwh > 0) {
+      this.setState({ energystate: kwh + ' kWh' })
+      this.setState({ energyElect: kwh + ' kWh' })
+    } else {
+      this.setState({ energystate: 'Ei dataa' })
+      this.setState({ energyElect: 'Ei dataa' })
+    }
   }
 
   goToNextScreen = (buildingID, timeStart, timeStop, datapointArray, graphType) => { //[this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp]
@@ -430,42 +466,34 @@ export default class GenGraphScreen extends React.Component {
     this.setState({ co2dp: validDataPointsCO2 })
   }
 
-  /*
-  //Performing multiple concurrent requests
-  function getUserAccount() {
-    return axios.get('/user/12345');
-  }
-  function getUserPermissions() {
-    return axios.get('/user/12345/permissions');
-  }
-  axios.all([getUserAccount(), getUserPermissions()])
-    .then(axios.spread(function (acct, perms) {
-      // Both requests are now complete
-    }));*/
-
-
-  /* const p = new Promise(resovle => setTimeout(resovle));
-   new Promise(resolve => resolve(p)).then(() => {
-     console.log("tick 3");
-   });
-   p.then(() => {
-     console.log("tick 1");
-   }).then(() => {
-     console.log("tick 2");
-   });*/
   getValuesFromNuuka = () => {
     console.log('accessing nuuka api for values');
     this.loading();
-    const dates = startTimeStatic + this.state.dateStart + "%20" + this.state.hourslider[0] + ":00" + endTimeStatic + this.state.dateEnd + "%20" + this.state.hourslider[1] + ":00";
-    // const measurementDataIDsCO2 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.datapoint1 + this.state.datapoint2 + this.state.datapoint3 + dates + timeStampZone + apitoken //muuta datapointit ja nimi
-    const constumptionsByCategory = nuukaApi + getConsumptionsByCategory + this.state.buildingID + dates + energyTypeIDs + timeGrouping + apitoken;
+    var dates = startTimeStatic + this.state.dateStart + "%20" + this.state.hourslider[0] + ":00" + endTimeStatic + this.state.dateEnd + "%20" + this.state.hourslider[1] + ":00";
+    // var measurementDataIDsCO2 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.datapoint1 + this.state.datapoint2 + this.state.datapoint3 + dates + timeStampZone + apitoken //muuta datapointit ja nimi
+    var constumptionsByCategory = nuukaApi + getConsumptionsByCategory + this.state.buildingID + dates + energyTypeIDs + timeGrouping + apitoken;
 
-    const measurementDataIDsCO2 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.co2dp + dates + timeStampZone + apitoken;
-    const measurementDataIDsVOC = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.vocdp + dates + timeStampZone + apitoken;
-    const measurementDataIDsENERGY = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.energydp + dates + timeStampZone + apitoken;
-    const measurementDataIDsPM10 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.pm10dp + dates + timeStampZone + apitoken;
-    const measurementDataIDsTEMPERATURE = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.tempdp + dates + timeStampZone + apitoken;
+    var measurementDataIDsCO2 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.co2dp + dates + timeStampZone + apitoken;
+    var measurementDataIDsVOC = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.vocdp + dates + timeStampZone + apitoken;
+    var measurementDataIDsENERGY = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.energydp + dates + timeStampZone + apitoken;
+    var measurementDataIDsPM10 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.pm10dp + dates + timeStampZone + apitoken;
+    var measurementDataIDsTEMPERATURE = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.tempdp + dates + timeStampZone + apitoken;
 
+    //make sure all values are null when updating them that there are no datapoints from 2 buildings or anyhting
+    datapointerinosco2 = [];
+    datapointerinosvaluesco2 = 0;
+
+    datapointerinosvoc = [];
+    datapointerinosvaluesvoc = 0;
+
+    datapointerinospm10 = [];
+    datapointerinosvaluespm10 = 0;
+
+    datapointerinosenergy = [];
+    datapointerinosvaluesenergy = 0;
+
+    datapointerinostemperature = [];
+    datapointerinosvaluestemperature = 0;
 
 
     //CO2 VALUE FETCHING
@@ -695,7 +723,7 @@ export default class GenGraphScreen extends React.Component {
           <View style={styles.picker}>
 
             <Text style={styles.value}>{this.state.currentBuilding}</Text>
-            <Text>Valitun ajanjakson keskiarvot.</Text>
+            <Text>Näytetään valitun ajanjakson keskiarvot</Text>
 
             <MultiSlider
               values={[this.state.hourslider[0], this.state.hourslider[1]]}

@@ -14,25 +14,10 @@ export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      placemarkers: [{
-        id: 1,
-        name: 'sample 1',
-        coordinates: {
-          latitude: 60.185847,
-          longitude: 24.937387
-        },
-      },
-      {
-        id: 2,
-        name: 'sample 2',
-        coordinates: {
-          latitude: 60.185847,
-          longitude: 24.962622
-        },
-      }],
+      placemarkers: [],
       activeMarker: {
-        id: 1,
-        name: 'sample 1',
+        id: 2410,
+        name: 'Kaisaniemen ala-aste',
       },
     }
   }
@@ -78,10 +63,11 @@ export default class App extends React.Component {
 
   changeActiveMarker = (markername, markerid) => {
     console.log(markername + ' and ' + markerid);
+    let markerfiltered = markername.substring(5);
     this.setState({
       activeMarker: {
         id: markerid,
-        name: markername,
+        name: markerfiltered,
       }
     })
   }
@@ -103,7 +89,7 @@ export default class App extends React.Component {
             <MapView.Callout tooltip onPress={() => this.goToNextScreen(this.state.activeMarker.id, this.state.activeMarker.name)}>
               <TouchableOpacity underlayColor='#dddddd'>
                 <View style={styles.customView} >
-                  <Text style={styles.value}>{marker.name}</Text>
+                  <Text style={styles.value}>{marker.name.substring(5)}</Text>
                 </View>
               </TouchableOpacity>
             </MapView.Callout>
