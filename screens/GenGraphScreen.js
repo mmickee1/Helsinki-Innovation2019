@@ -25,11 +25,11 @@ const titles = {
     }, {
       type: 'Tyyppi'
     }, {
-      co2: 'CO2-Hiukkaset'
+      co2: 'CO2-Pitoisuus'
     }, {
-      pm10: 'PM10-Hiukkaset'
+      pm10: 'PM10-Pitoisuus'
     }, {
-      voc: 'VOC-hiukkaset'
+      voc: 'VOC-Pitoisuus'
     }, {
       all: 'All Graphs'
     }
@@ -47,31 +47,25 @@ const startTimeStatic = '&StartTime='
 const endTimeStatic = '&EndTime='
 const timeStampZone = '&TimestampTimeZone=UTCOffset&MeasurementSystem=SI&$format=json&$token='
 var datapointerinosco2 = [];
-let datapointerinosvaluesco2 = 0;
+var datapointerinosvaluesco2 = 0;
 
 var datapointerinosvoc = [];
-let datapointerinosvaluesvoc = 0;
+var datapointerinosvaluesvoc = 0;
 
 var datapointerinospm10 = [];
-let datapointerinosvaluespm10 = 0;
+var datapointerinosvaluespm10 = 0;
 
 var datapointerinosenergy = [];
-let datapointerinosvaluesenergy = 0;
+var datapointerinosvaluesenergy = 0;
 
 var datapointerinostemperature = [];
-let datapointerinosvaluestemperature = 0;
+var datapointerinosvaluestemperature = 0;
 
 
 const getConsumptionsByCategory = 'GetConsumptionsByCategory/?Building='
 const energyTypeIDs = '&EnergyTypeIDs=1,2' //1 for elecricity and 2 for heating => total consumption
 const timeGrouping = '&TimeGrouping=hour&ShowMetaData=false&MeasurementSystem=SI&$format=xml&$token='
 
-
-
-//esimerkki co2 arvojen saamisesta
-//https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/GetMeasurementDataByIDs/?&Building=2410&DataPointIDs=83511;83519;83527&StartTime=2019-08-01&EndTime=2019-08-30&TimestampTimeZone=UTCOffset&MeasurementSystem=SI&$format=json&$token=L2FyTzA3UHp1cGdnUzNMcjRuSUIvZ2o0Q2tCclhQam44SGo5Nm9HcE0zcz06TWV0cm9wb2xpYV9BUEk6NjM3MDMxOTIzMzk5NjcxNzEwOlRydWU=
-
-//working startTime: 2019 elokuu. eli 2019-08-1   ja 2019-08-1
 
 /*
 CO2 levels from https://www.kane.co.uk/knowledge-centre/what-are-safe-levels-of-co-and-co2-in-rooms
@@ -115,18 +109,6 @@ Less than 0.3 mg/m3	   Low
 0.3 to 0.5 mg/m3	   Acceptable
 0.5 to 1 mg/m3	   Marginal
 1 to 3 mg/m3	   High*/
-
-/*
-          <TouchableOpacity onPress={() => {
-this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.datapoint1, this.state.datapoint2, this.state.datapoint3], titles.titles[2].type);
-}} >
-<View style={[styles.circle, this.state.typecolor]}>
-<Text style={styles.value}>{this.state.typestate}</Text>
-</View>
-</TouchableOpacity>
-<View>
-<Text style={styles.title}>{titles.titles[2].type}</Text>
-</View>*/
 
 export default class GenGraphScreen extends React.Component {
   constructor(props) {
@@ -246,30 +228,17 @@ export default class GenGraphScreen extends React.Component {
      // });
       // }
     }
-    //this.checkPrefix();
   }*/
 
   componentDidUpdate(nextProps, prevState, snapshot) {
-    
-    //console.log(nextProps);
-    //console.log(prevState);
     if (nextProps.navigation.state.params.buildingID !== prevState.buildingID) {
-
-     // console.log('it was different boiiii!' + nextProps.navigation.state.params.buildingID + nextProps.navigation.state.params.buildingID)
-      // return {
-      // that.setState({
-      //  return {
       this.setState({
         currentBuilding: nextProps.navigation.state.params.buildingName,
         buildingID: nextProps.navigation.state.params.buildingID
+      }, function () {
+        console.log('state changed successfully: ' + this.state.buildingID);
+        this.prefixvalues();
       })
-      console.log('these should match' + this.state.buildingID + '=' + nextProps.navigation.state.params.buildingID)
-      //this.checkPrefix();
-      setTimeout( () => {
-        this.checkPrefix();
-     },2000);
-      // });
-      // }
     }
   }
 
@@ -295,7 +264,7 @@ export default class GenGraphScreen extends React.Component {
       var validDataPointsTemperature = '';
       var temp2dpcalculator = 0;
 
-      for (let point of datapoints.data) {
+      for (var point of datapoints.data) {
         if (point.Category === 'indoor conditions: co2') {
           if (co2dpcalculator === 10) {
             break;
@@ -303,11 +272,11 @@ export default class GenGraphScreen extends React.Component {
           roomList.push(point.Name);
           validDataPointsCO2 = validDataPointsCO2 + point.DataPointID + ';';
           co2dpcalculator += 1;
-          console.log('co2dpcalculator size: ' + co2dpcalculator);
+          //console.log('co2dpcalculator size: ' + co2dpcalculator);
         }
       }
 
-      for (let point of datapoints.data) {
+      for (var point of datapoints.data) {
         if (point.Category === 'indoor conditions: tvoc (ppb)') {
           if (vocdpcalculator === 10) {
             break;
@@ -317,7 +286,7 @@ export default class GenGraphScreen extends React.Component {
         }
       }
 
-      for (let point of datapoints.data) {
+      for (var point of datapoints.data) {
         if (point.Category === 'indoor conditions: pm10 (uq/m3)') {
           if (pm10dpcalculator === 10) {
             break;
@@ -327,7 +296,7 @@ export default class GenGraphScreen extends React.Component {
         }
       }
 
-      for (let point of datapoints.data) {
+      for (var point of datapoints.data) {
         if (point.Category === 'electricity') {  //heating is in MWh , change it first , then add this to if statement /* || point.Category === 'heating'*/
           if (energydpcalculator === 10) {
             break;
@@ -337,14 +306,14 @@ export default class GenGraphScreen extends React.Component {
         }
       }
 
-      for (let point of datapoints.data) {
+      for (var point of datapoints.data) {
         if (point.Category === 'indoor conditions: temperature') {
           if (temp2dpcalculator === 10) {
             break;
           }
           validDataPointsTemperature = validDataPointsTemperature + point.DataPointID + ';';
           temp2dpcalculator += 1;
-          console.log('temperaturedpcalculator size: ' + temp2dpcalculator);
+          //console.log('temperaturedpcalculator size: ' + temp2dpcalculator);
         }
       }
 
@@ -363,11 +332,6 @@ export default class GenGraphScreen extends React.Component {
 
   componentDidMount() {
     console.log('component did mount');
-    this.checkPrefix();
-    //this.getValuesFromNuuka();
-  }
-
-  checkPrefix() {
     this.prefixvalues();
   }
 
@@ -515,6 +479,21 @@ export default class GenGraphScreen extends React.Component {
     var measurementDataIDsPM10 = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.pm10dp + dates + timeStampZone + apitoken;
     var measurementDataIDsTEMPERATURE = nuukaApi + getMeasurementDataByID + this.state.buildingID + dataPointIDS + this.state.tempdp + dates + timeStampZone + apitoken;
 
+    //make sure all values are null when updating them that there are no datapoints from 2 buildings or anyhting
+    datapointerinosco2 = [];
+    datapointerinosvaluesco2 = 0;
+
+    datapointerinosvoc = [];
+    datapointerinosvaluesvoc = 0;
+
+    datapointerinospm10 = [];
+    datapointerinosvaluespm10 = 0;
+
+    datapointerinosenergy = [];
+    datapointerinosvaluesenergy = 0;
+
+    datapointerinostemperature = [];
+    datapointerinosvaluestemperature = 0;
 
 
     //CO2 VALUE FETCHING
