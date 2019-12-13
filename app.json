@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Demand response",
-    "slug": "DemandResponse",
+    "name": "ResDem",
+    "slug": "ResDem",
     "privacy": "public",
     "sdkVersion": "35.0.0",
     "platforms": [
@@ -24,7 +24,11 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "energyguys.resdem"
+    },
+    "android": {
+      "package": "energyguys.resdem"
     },
     "packagerOpts": {
       "config": "metro.config.js",

@@ -681,7 +681,7 @@ export default class GenGraphScreen extends React.Component {
               date={this.state.dateStart}
               mode="date"
               placeholder={this.state.dateStart}
-              format="DD-MM-YYYY"
+              format="YYYY-MM-DD"
               minDate="2015-05-01"
               maxDate={this.state.dateToday}
               confirmBtnText="Confirm"
@@ -714,7 +714,7 @@ export default class GenGraphScreen extends React.Component {
               date={this.state.dateEnd}
               mode="date"
               placeholder={this.state.dateEnd}
-              format="DD-MM-YYYY"
+              format="YYYY-MM-DD"
               minDate={this.state.dateStart}
               maxDate={this.state.dateToday}
               confirmBtnText="Confirm"
