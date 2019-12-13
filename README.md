@@ -1,4 +1,4 @@
-![LOGO](https://raw.githubusercontent.com/mmickee1/Helsinki-Innovation2019/master/assets/resdem.png)
+![LOGO](https://raw.githubusercontent.com/mmickee1/Helsinki-Innovation2019/master/assets/resdem.png?token=AH35XWUBCWSQIM45RRWMJRK57R75Y)
 
 # Helsinki-Innovation2019
 Innovation project for City of Helsinki
