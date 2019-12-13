@@ -3,10 +3,17 @@
 # Helsinki-Innovation2019
 Innovation project for City of Helsinki
 
-# App previews
+# Preview
 
+# Choose desired building from map.
 ![Map](https://i.pinimg.com/originals/17/79/03/17790375987154f503015622461d9545.jpg)
+
+
+# Browse data from desired timeline and see average data of it. 
 ![Circle graph](https://i.pinimg.com/originals/c9/92/e9/c992e97f7180ae90d3e23f26fb3310ad.jpg)
+
+
+# Same data can also be visually shown in graph.
 ![Graph](https://i.pinimg.com/originals/db/fa/fc/dbfafce14ee4d5b546228b889e04548e.jpg)
 
 
