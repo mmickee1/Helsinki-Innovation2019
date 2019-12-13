@@ -941,7 +941,7 @@ const styles = StyleSheet.create({
     // alignItems: 'flex-end',
     position: 'absolute',
     right: 0,
-    top: 50,
+    top: 70,
     backgroundColor: '#ffffff'
   }
 });
