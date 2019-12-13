@@ -3,6 +3,7 @@ import { Platform, StyleSheet, Text, TouchableHighlight, View } from 'react-nati
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps'
 import axios from 'axios'
 import { TouchableOpacity, TapGestureHandler } from 'react-native-gesture-handler'
+import { MaterialIcons } from '@expo/vector-icons'
 
 const nuuka = 'https://nuukacustomerwebapi.azurewebsites.net/api/v2.0/'
 const getUserBuildings = 'GetUserBuildings/?&$format=json&$token='
@@ -89,7 +90,7 @@ export default class App extends React.Component {
             <MapView.Callout tooltip onPress={() => this.goToNextScreen(this.state.activeMarker.id, this.state.activeMarker.name)}>
               <TouchableOpacity underlayColor='#dddddd'>
                 <View style={styles.customView} >
-                  <Text style={styles.value}>{marker.name.substring(5)}</Text>
+                  <Text style={styles.value}>{marker.name.substring(5)} <MaterialIcons name="navigate-next" size = { 18 } color = "#ffffff"/></Text>
                 </View>
               </TouchableOpacity>
             </MapView.Callout>
@@ -111,11 +112,11 @@ onPress={() => {
 
 const styles = StyleSheet.create({
   customView: {
-    backgroundColor: '#ffff',
-    color: '#ffff',
+    backgroundColor: '#333333',
+    padding: 10
   },
   value: {
-    fontWeight: 'bold',
-    fontSize: 24,
+    fontSize: 18,
+    color: '#e6ca5c'
   },
 })

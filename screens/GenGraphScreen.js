@@ -25,13 +25,13 @@ const titles = {
     }, {
       type: 'Tyyppi'
     }, {
-      co2: 'CO2-Pitoisuus'
+      co2: 'CO2 -pitoisuus'
     }, {
-      pm10: 'PM10-Pitoisuus'
+      pm10: 'PM10 -pitoisuus'
     }, {
-      voc: 'VOC-Pitoisuus'
+      voc: 'VOC -pitoisuus'
     }, {
-      all: 'All Graphs'
+      all: 'All graphs'
     }
   ]
 };
@@ -76,22 +76,22 @@ I received 450-650 from nuuka api
 2,000-5,000 ppm	    Headaches, sleepiness and stagnant, stale, stuffy air. Poor concentration,
                     loss of attention, increased heart rate and slight nausea may also be present.
 5,000       ppm	    Workplace exposure limit (as 8-hour TWA) in most jurisdictions.
->40,000     ppm	    Exposure may lead to serious oxygen deprivation resulting in permanent brain damage, 
+>40,000     ppm	    Exposure may lead to serious oxygen deprivation resulting in permanent brain damage,
                     coma, even death.*/
 
 
 /* Nuuka data:
 Min kesä	Max kesä	Min talvi	Max talvi	Min kesä	Max kesä	Min talvi	Max talvi	Min kesä	Max kesä	Min talvi	Max talvi
 Sisälämpötila (C)	22	25	20,5	22,5	21	26	20,5	23	20	27	20	25
-Suhteellinen ilmankosteus (%)	 	 	25	45	 	 	 	 	 	 	 	 
+Suhteellinen ilmankosteus (%)	 	 	25	45
 CO2 (ppm)	0	750	0	750	0	950	0	950	0	1200	0	1200
-Haihtuvien orgaanisten yhdisteiden kokonaismäärä (TVOC, ppb)	0	660	0	660	0	660	0	660	 	 	 	 
-Paine-ero sisä / ulkona (Pa)	-2	2	-2	2	-2	2	-2	2	 	 	 	 
+Haihtuvien orgaanisten yhdisteiden kokonaismäärä (TVOC, ppb)	0	660	0	660	0	660	0	660
+Paine-ero sisä / ulkona (Pa)	-2	2	-2	2	-2	2	-2	2
 PM2,5 (μg / m3)	0	10	0	10	0	10	0	10	0	25	0	25
-PM2,5 sisällä / ulkopuolella (0-1)	0	0,5	0	0,5	0	0,7	0	0,7	 	 	 	 
-PM10 (μg / m3)	0	25	0	25	0	25	0	25	 	 	 	 
-Tuloilman lämpötila (C)	 	 	17	19	 	 	17	19	 	 	 	 
-Vetoa aistivien osuus (%)	0	10	0	10	0	15	0	15	 	 	 	 
+PM2,5 sisällä / ulkopuolella (0-1)	0	0,5	0	0,5	0	0,7	0	0,7
+PM10 (μg / m3)	0	25	0	25	0	25	0	25
+Tuloilman lämpötila (C)	 	 	17	19	 	 	17	19
+Vetoa aistivien osuus (%)	0	10	0	10	0	15	0	15
 Ilman liikenopeus (m / s)	0	0,2	0	0,15	0	0,25	0	0,2	0	0,3	0	0,2
 Radonpitoisuus (Bq / m3)	0	100	0	100	0	100	0	100	0	200	0	200*/
 
@@ -100,7 +100,7 @@ lämpötila 21-23,  20-21/23-25, -20 25+
 co2  0-750, 750-950, 950+
 pm10 0-10, 10-20, 20+
 voc 0-0.5 , 0.5-1, 1+   //ppm = (μg / m3)  / 1000
-energy WHITE CIRLCE, cant be calculated yet before nuuka's api is updated 
+energy WHITE CIRLCE, cant be calculated yet before nuuka's api is updated
 */
 
 /*
@@ -579,7 +579,7 @@ export default class GenGraphScreen extends React.Component {
         this.loadingdone();
       });
 
-    //VOC VALUE FETCHING   
+    //VOC VALUE FETCHING
     axios.get(measurementDataIDsVOC).then(datapoints => {
       datapoints.data.forEach(function (point) {
         if (point.Value !== 0) {
@@ -659,91 +659,90 @@ export default class GenGraphScreen extends React.Component {
 
     return (
       <View style={styles.container} >
-
-
         <View style={styles.containerstatictop}>
-          <DatePicker
-            style={{ width: 150 }}
-            date={this.state.dateStart}
-            mode="date"
-            placeholder={this.state.dateStart}
-            format="YYYY-MM-DD"
-            minDate="2015-05-01"
-            maxDate={this.state.dateToday}
-            confirmBtnText="Confirm"
-            cancelBtnText="Cancel"
-            customStyles={{
-              dateIcon: {
-                position: 'absolute',
-                left: 0,
-                top: 4,
-                marginLeft: 0
-              },
-              dateInput: {
-                marginLeft: 36
-              }
-            }}
-            onDateChange={(startTime) => {
-              this.setState({ dateStart: startTime })
-              //console.log('date changed ' + startTime);
-              this.getValuesFromNuuka();
-            }}
-          />
-          {this.state.showloading &&
-            <View>
-              <ActivityIndicator />
-            </View>
-          }
 
-          < DatePicker
-            style={{ width: 150 }}
-            date={this.state.dateEnd}
-            mode="date"
-            placeholder={this.state.dateEnd}
-            format="YYYY-MM-DD"
-            minDate={this.state.dateStart}
-            maxDate={this.state.dateToday}
-            confirmBtnText="Confirm"
-            cancelBtnText="Cancel"
-            customStyles={{
-              dateIcon: {
-                position: 'absolute',
-                left: 0,
-                top: 4,
-                marginLeft: 0
-              },
-              dateInput: {
-                marginLeft: 36
-              }
-            }}
-            onDateChange={(endTime) => {
-              this.setState({ dateEnd: endTime })
-              //console.log('date changed ' + endTime);
-              this.getValuesFromNuuka();
-            }}
-          />
+          <View style={styles.staticinfo}>
+            <Text style={styles.valuename}>{this.state.currentBuilding}</Text>
+            <Text style={styles.helptext}>Näytetään valitun ajanjakson keskiarvot</Text>
+            <MultiSlider style={styles.timeslider}
+              values={[this.state.hourslider[0], this.state.hourslider[1]]} sliderLength={220}
+              onValuesChange={this.multiSliderValuesChange}
+              touchDimensions={height = 50, width = 50, borderRadius = 15, slipDisplacement = 200}
+              min={0}
+              max={23}
+              step={1}
+            />
+          <Text style={styles.titletimer}>Kellonaika:   {this.state.hourslider[0]}:00  -  {this.state.hourslider[1]}:00</Text>
+          </View>
+
+          <View style={styles.datepickercontainer}>
+            <DatePicker
+              style={styles.datepicker}
+              date={this.state.dateStart}
+              mode="date"
+              placeholder={this.state.dateStart}
+              format="DD-MM-YYYY"
+              minDate="2015-05-01"
+              maxDate={this.state.dateToday}
+              confirmBtnText="Confirm"
+              cancelBtnText="Cancel"
+              customStyles={{
+                dateIcon: {
+                  position: 'absolute',
+                  left: 0,
+                  top: 4,
+                  marginLeft: 0
+                },
+                dateInput: {
+                  marginLeft: 36
+                }
+              }}
+              onDateChange={(startTime) => {
+                this.setState({ dateStart: startTime })
+                //console.log('date changed ' + startTime);
+                this.getValuesFromNuuka();
+              }}
+            />
+            {this.state.showloading &&
+              <View>
+                <ActivityIndicator />
+              </View>
+            }
+
+            <DatePicker
+              style={styles.datepicker}
+              date={this.state.dateEnd}
+              mode="date"
+              placeholder={this.state.dateEnd}
+              format="DD-MM-YYYY"
+              minDate={this.state.dateStart}
+              maxDate={this.state.dateToday}
+              confirmBtnText="Confirm"
+              cancelBtnText="Cancel"
+              customStyles={{
+                dateIcon: {
+                  position: 'absolute',
+                  left: 0,
+                  top: 4,
+                  marginLeft: 0
+                },
+                dateInput: {
+                  marginLeft: 36
+                }
+              }}
+              onDateChange={(endTime) => {
+                this.setState({ dateEnd: endTime })
+                //console.log('date changed ' + endTime);
+                this.getValuesFromNuuka();
+              }}
+            />
+          </View>
         </View>
-
-        <View style={styles.staticinfo}>
-          <Text style={styles.valuename}>{this.state.currentBuilding}</Text>
-          <Text style={styles.helptext}>Näytetään valitun ajanjakson keskiarvot</Text>
-          <MultiSlider
-            values={[this.state.hourslider[0], this.state.hourslider[1]]}
-            //sliderLength={240}
-            onValuesChange={this.multiSliderValuesChange}
-            //touchDimensions={height = 50, width = 50, borderRadius = 15, slipDisplacement = 200}
-            min={0}
-            max={23}
-            step={1}
-          />
-          <Text style={styles.titletimer}>Kellonaika:   {this.state.hourslider[0]}  -  {this.state.hourslider[1]}</Text>
-        </View>
-
-
-
 
         <ScrollView style={styles.child}>
+          <View style={styles.scrollView}>
 
+            <View style={styles.circlecontainer}>
           <TouchableOpacity onPress={() => {
             this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp], titles.titles[0].energy);
           }} >
@@ -754,8 +753,9 @@ export default class GenGraphScreen extends React.Component {
           <View>
             <Text style={styles.title}>{titles.titles[0].energy}</Text>
           </View>
+          </View>
 
-
+          <View style={styles.circlecontainer}>
           <TouchableOpacity onPress={() => {
             this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp], titles.titles[1].temperature);
           }} >
@@ -766,14 +766,9 @@ export default class GenGraphScreen extends React.Component {
           <View>
             <Text style={styles.title}>{titles.titles[1].temperature}</Text>
           </View>
+          </View>
 
-
-
-
-
-
-
-
+          <View style={styles.circlecontainer}>
           <TouchableOpacity onPress={() => {
             this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp], titles.titles[3].co2);
           }} >
@@ -784,8 +779,9 @@ export default class GenGraphScreen extends React.Component {
           <View>
             <Text style={styles.title}>{titles.titles[3].co2}</Text>
           </View>
+          </View>
 
-
+          <View style={styles.circlecontainer}>
           <TouchableOpacity onPress={() => {
             this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp], titles.titles[4].pm10);
           }} >
@@ -796,11 +792,9 @@ export default class GenGraphScreen extends React.Component {
           <View>
             <Text style={styles.title}>{titles.titles[4].pm10}</Text>
           </View>
+          </View>
 
-
-
-
-
+          <View style={styles.circlecontainer}>
           <TouchableOpacity onPress={() => {
             this.goToNextScreen(this.state.buildingID, this.state.dateStart, this.state.dateEnd, [this.state.co2dp, this.state.vocdp, this.state.pm10dp, this.state.energydp, this.state.tempdp], titles.titles[5].voc);
           }} >
@@ -811,8 +805,11 @@ export default class GenGraphScreen extends React.Component {
           <View>
             <Text style={styles.title}>{titles.titles[5].voc}</Text>
           </View>
+          </View>
 
+          </View>
         </ScrollView >
+
       </View >
 
     );
@@ -839,46 +836,36 @@ export default class GenGraphScreen extends React.Component {
 
 const styles = StyleSheet.create({
   container: {
-   /* flex: 1,
-    flexWrap: 'wrap',
-    flexDirection: 'column',
-    justifyContent: 'space-evenly', */
-    //paddingTop: 16,
-    //padding: 6,
-    marginHorizontal: 16,
-    padding: 4,
-    marginVertical: 4,
-    // marginTop: 8,
-    //marginHorizontal: 8,
+    padding: 10,
+    backgroundColor: '#212121',
+    color: '#ffffff',
     height: '100%'
   },
-  containerstatictop: {
-    flex: 1,
-    flexWrap: 'wrap',
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-  },
   child: {
-    //justifyContent: 'center',
+    // alignItems: 'flex-start'
+  },
+  scrollView: {
+    paddingTop: 10,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-start'
+  },
+  circlecontainer: {
+    width: '50%',
     alignItems: 'center',
-    //textAlign: 'center',
-
-    //flex: 1,
-    //flexWrap: 'wrap',
-    //flexDirection: 'column',
-    //justifyContent: 'space-evenly', //space-evenly -nyt ok mutta ruudun oikeassa laidassa ulkona näkymästä :D
-
-
+    paddingBottom: 10
   },
   header: {
     fontSize: 32,
   },
   title: {
-    fontSize: 24,
+    fontSize: 18,
     justifyContent: 'center',
     //alignSelf: 'center',
     alignItems: 'center',
     paddingBottom: 16,
+    paddingTop: 10,
+    color: '#ffffff'
   },
   circle: {
     width: 150,
@@ -888,19 +875,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#000000',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   redcircle: {
-    color: '#ff0000',
-    backgroundColor: '#ff0000',
+    color: '#D76666',
+    backgroundColor: '#D76666',
   },
   greencircle: {
-    color: '#00ff00',
-    backgroundColor: '#00ff00',
+    color: '#80DD84',
+    backgroundColor: '#80DD84',
   },
   yellowcircle: {
-    color: '#ffff00',
-    backgroundColor: '#fff000',
+    color: '#FFF666',
+    backgroundColor: '#FFF666',
   },
   neutralcircle: {
     color: '#ffff',
@@ -913,9 +900,8 @@ const styles = StyleSheet.create({
   },
   valuename: {
     fontWeight: 'bold',
-    fontSize: 36,
-    paddingTop: 10,
-    marginTop: 20,
+    fontSize: 30,
+    color: '#E17C49'
   },
   loaderstyle: {
     position: 'absolute',
@@ -926,24 +912,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center'
   },
+  timeslider: {
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
   picker: {
     width: 150,
     marginTop: 30,
-    marginBottom: 30,
   },
   staticinfo: {
     textAlign: 'center',
     justifyContent: 'center'
   },
   titletimer: {
-    fontSize: 24,
-    justifyContent: 'center',
-    textAlign: 'center',
-    alignItems: 'center'
+    fontSize: 12,
+    color: '#ffffff',
+    textTransform: 'uppercase',
+    marginBottom: 50,
+    marginTop: -10
   },
   helptext: {
-    justifyContent: 'center',
-    textAlign: 'center',
-    alignItems: 'center',
+    color: '#ffffff'
+  },
+  datepicker: {
+    width: 150,
+  },
+  datepickercontainer: {
+    // alignItems: 'flex-end',
+    position: 'absolute',
+    right: 0,
+    top: 40,
+    backgroundColor: '#ffffff'
   }
 });
