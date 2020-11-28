@@ -27,7 +27,8 @@ Author is mmickee1.
 no support for direct download, requires paid account to deliver. Use developer approach to open on iOS.
 
 
-================================================
+
+
 for developers:
 # Installation: 
 developed with: 
