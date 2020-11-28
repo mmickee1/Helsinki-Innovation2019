@@ -18,12 +18,20 @@ Innovation project for City of Helsinki
 
 
 
+for users:
+# Android 
+go to https://expo.io/@mmickee1/projects/ResDem and download the app. Or use expo android app and search for "ResDem". 
+Author is mmickee1.
+
+# iOS
+no support for direct download, requires paid account to deliver. Use developer approach to open on iOS.
 
 
-
-
+================================================
+for developers:
 # Installation: 
-
+developed with: 
+node.js 10.18.0 LTS
 ```
 git clone https://github.com/mmickee1/Helsinki-Innovation2019.git
 cd Helsinki-Innovation2019
