@@ -60,6 +60,20 @@ export default class DetailedGraphScreen extends React.Component {
     this.loadBuilding();
   }
 
+  componentWillUpdate(nextProps, prevState) {
+    if (nextProps.navigation.state.params) {
+      if (nextProps.navigation.state.params.buildingID !== prevState.buildingID) {
+        this.setState({
+          buildingID: nextProps.navigation.state.params.buildingID,
+          timeStart: nextProps.navigation.state.params.timeStart
+        }, function () {
+          console.log('state changed successfully: ' + this.state.buildingID);
+          this.loadBuilding();
+        })
+      }
+    }
+  }
+
   async loadBuilding() {
     const params = this.props.navigation.state.params;
 
