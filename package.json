@@ -56,7 +56,7 @@
     "@babel/core": "7.0.1",
     "babel-preset-expo": "^7.0.0",
     "minimist": "^0.2.1",
-    "node-fetch": "^3.0.0-beta.9",
+    "node-fetch": "^3.1.1",
     "vue-native-scripts": "^0.1.4",
     "yargs-parser": "^13.1.2"
   },
